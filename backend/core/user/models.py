@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.conf import settings
+from django.contrib.auth.models import User
 
 class CustomUser(AbstractUser):
     email = models.EmailField(unique=True)
@@ -12,8 +13,8 @@ class CustomUser(AbstractUser):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
     
-from django.db import models
-from django.contrib.auth.models import User
+
+
 
 class UserProfile(models.Model):
     SUBSCRIPTION_CHOICES = [

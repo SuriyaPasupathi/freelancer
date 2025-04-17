@@ -16,10 +16,11 @@ User = get_user_model()
 # ✅ Register View
 class RegisterView(APIView):
     def post(self, request):
-        data = request.data
-        # Perform validation and create account
-        # Return success or error response
-        return Response({"message": "Account created successfully!"}, status=status.HTTP_201_CREATED)
+        serializer = RegisterSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()  # This calls the create method inside the serializer
+            return Response({"message": "Account created successfully!"}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # ✅ Login View (Custom response with tokens)
 class CustomLoginView(APIView):
@@ -27,13 +28,21 @@ class CustomLoginView(APIView):
         email = request.data.get("email")
         password = request.data.get("password")
         user = User.objects.filter(email=email).first()
+
         if user and user.check_password(password):
             refresh = RefreshToken.for_user(user)
             return Response({
                 "access": str(refresh.access_token),
                 "refresh": str(refresh),
+                "user": {
+                    "id": user.id,
+                    "username": user.username,
+                    "email": user.email,
+                }
             })
+
         return Response({"detail": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
+
 
 # ✅ Get My Account (User Profile)
 class MyAccountView(APIView):
