@@ -6,7 +6,7 @@ import Register from "./pages/Register";
 import LoginForm from "./components/auth/LoginForm";
 import SubscriptionPage from "./pages/subscriptions";
 
-import Userprofile from "./pages/Userprofile";
+import ProfilePage from "./pages/Userprofile";
 
 const App = () => {
   return (
@@ -19,7 +19,7 @@ const App = () => {
         {/* App Pages */}
   
         <Route path="/subscription" element={<SubscriptionPage />} />
-        <Route path="/Userprofile" element={<Userprofile />} />
+        <Route path="/Userprofile" element={<ProfilePage />} />
       </Routes>
     </Router>
   );

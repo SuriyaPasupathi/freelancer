@@ -1,5 +1,6 @@
 import React from 'react';
-import './common.css'; // We'll use a separate CSS file instead of Tailwind
+import { useNavigate } from 'react-router-dom'; // 👈 for navigation
+import './common.css';
 
 function CheckIcon() {
   return (
@@ -10,6 +11,8 @@ function CheckIcon() {
 }
 
 function SubscriptionPage() {
+  const navigate = useNavigate();
+
   const plans = [
     {
       name: "Basic",
@@ -56,6 +59,10 @@ function SubscriptionPage() {
     }
   ];
 
+  const handleSignup = (plan) => {
+    navigate("/Userprofile", { state: { selectedFeatures: plan.features, planName: plan.name } });
+  };
+
   return (
     <div className="pricing-container">
       {plans.map((plan, index) => (
@@ -63,25 +70,16 @@ function SubscriptionPage() {
           key={index}
           className={`pricing-card ${plan.popular ? 'popular' : ''}`}
         >
-          {plan.popular && (
-            <div className="best-choice">
-              Best Choice
-            </div>
-          )}
-          
+          {plan.popular && <div className="best-choice">Best Choice</div>}
           <div className="card-content">
             <h3 className="plan-name">{plan.name}</h3>
-            
             <div className="price-container">
               <div className="price">
                 <span className="currency">USD</span>
                 <span className="amount">{plan.price}</span>
-                {plan.price !== "Free" && (
-                  <span className="period">/annually</span>
-                )}
+                {plan.price !== "Free" && <span className="period">/annually</span>}
               </div>
             </div>
-            
             <div className="features-container">
               <p className="includes">Includes:</p>
               <ul className="feature-list">
@@ -94,9 +92,8 @@ function SubscriptionPage() {
               </ul>
             </div>
           </div>
-          
           <div className="button-container">
-            <button className="signup-button">
+            <button className="signup-button" onClick={() => handleSignup(plan)}>
               Sign Up Now
             </button>
           </div>
