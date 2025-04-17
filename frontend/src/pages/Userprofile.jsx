@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const MyAccount = () => {
+const Userprofile = () => {
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -62,4 +62,4 @@ const MyAccount = () => {
   );
 };
 
-export default MyAccount;
+export default Userprofile;
