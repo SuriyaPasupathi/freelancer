@@ -178,117 +178,25 @@ const ProfilePage = () => {
           </div>
           
           <div className="flex justify-between items-center border-y border-gray-200 py-4 mb-5">
-            <h3 className="font-semibold text-lg">Work Excellence</h3>
-            <span className="text-xl font-bold text-blue-600">99%</span>
-          </div>
-          
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold mb-3">Public profile & URL</h3>
-            <div className="flex">
-              <input 
-                type="text" 
-                value="https://www.mytrustworld.com/john-d-apr113379" 
-                readOnly 
-                className="flex-1 border border-gray-300 rounded-l-md px-4 py-2 text-sm focus:outline-none"
-              />
-              <button className="bg-gray-100 border border-gray-300 border-l-0 rounded-r-md px-3 py-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                </svg>
+            <h3 className="font-bold">Client Reviews</h3>
+            <div className="flex gap-4">
+              <button onClick={prevReview} className="text-blue-600 hover:text-blue-800">
+                <IoChevronBack className="text-lg" />
+              </button>
+              <button onClick={nextReview} className="text-blue-600 hover:text-blue-800">
+                <IoChevronForward className="text-lg" />
               </button>
             </div>
           </div>
-          
-          <div className="mb-6">
-            <button className="bg-blue-600 text-white px-5 py-2 rounded font-medium hover:bg-blue-700 transition-colors">
-              Write a Review
-            </button>
-          </div>
-          
-          <div className="mb-6">
-            <div className="flex items-center gap-3">
-              <button onClick={prevReview} className="text-gray-500 text-xl p-1">
-                <IoChevronBack />
-              </button>
-              
-              <div className="flex-1 bg-gray-50 p-5 rounded-lg">
-                <div className="mb-2">
-                  <h4 className="font-semibold">{reviews[currentReviewIndex].author}</h4>
-                  <p className="text-sm text-gray-600">{reviews[currentReviewIndex].position}</p>
-                  <div className="flex gap-1 my-1">
-                    {renderStars(reviews[currentReviewIndex].rating)}
-                  </div>
-                </div>
-                <p className="text-sm text-gray-600">{reviews[currentReviewIndex].text}</p>
-              </div>
-              
-              <button onClick={nextReview} className="text-gray-500 text-xl p-1">
-                <IoChevronForward />
-              </button>
+
+          {/* Review */}
+          <div className="border-t border-gray-200 pt-5">
+            <div className="text-center mb-4">
+              <p className="font-semibold">{reviews[currentReviewIndex].author}</p>
+              <p className="text-gray-500">{reviews[currentReviewIndex].position}</p>
+              <div className="flex justify-center my-2">{renderStars(reviews[currentReviewIndex].rating)}</div>
             </div>
-          </div>
-          
-          <div className="border-b border-gray-200 pb-5 mb-5">
-            <h3 className="text-lg font-semibold mb-2">Services:</h3>
-            <p className="text-sm text-gray-600 leading-relaxed">
-              3D Design • Animation • Ad Design • Brand Design • Graphic Design • Illustration • Logo Design • UX Research • User Experience Design (UED) • Web Design
-            </p>
-            <button className="text-blue-600 text-sm mt-2 hover:underline">Show all services →</button>
-          </div>
-          
-          <div className="border-b border-gray-200 pb-5 mb-5">
-            <h3 className="text-lg font-semibold mb-3">Experience:</h3>
-            
-            <div className="flex gap-5 mb-4">
-              <div className="w-32 text-sm text-gray-600 shrink-0">July 2022 - Present</div>
-              <div>
-                <div className="flex items-center">
-                  <h4 className="font-semibold">WEB4 PTY LTD</h4>
-                  <span className="text-sm text-gray-600 ml-1">• QUEENSLAND, AUSTRALIA</span>
-                </div>
-                <p className="text-sm text-gray-600">UX / UI Designer, Senior Graphic Designer</p>
-                <p className="text-sm text-gray-600">Freelancer</p>
-              </div>
-            </div>
-            
-            <div className="flex gap-5 mb-4">
-              <div className="w-32 text-sm text-gray-600 shrink-0">July 2022 - Present</div>
-              <div>
-                <div className="flex items-center">
-                  <h4 className="font-semibold">WEB4 PTY LTD</h4>
-                  <span className="text-sm text-gray-600 ml-1">• QUEENSLAND, AUSTRALIA</span>
-                </div>
-                <p className="text-sm text-gray-600">UX / UI Designer, Senior Graphic Designer</p>
-                <p className="text-sm text-gray-600">Freelancer</p>
-              </div>
-            </div>
-            
-            <button className="text-blue-600 text-sm hover:underline">Show all experiences →</button>
-          </div>
-          
-          <div className="border-b border-gray-200 pb-5 mb-5">
-            <h3 className="text-lg font-semibold mb-2">Tools:</h3>
-            <p className="text-sm text-gray-600 leading-relaxed">
-              Figma • Animation • Adobe Photoshop • Adobe Illustrator • After Effects • InDesign • Blender
-            </p>
-          </div>
-          
-          <div className="border-b border-gray-200 pb-5 mb-5">
-            <h3 className="text-lg font-semibold mb-2">Skills:</h3>
-            <p className="text-sm text-gray-600 leading-relaxed">
-              Prototyping • Wireframing • Desktop App Design • Mobile App Design • HTML/CSS • Illustration • Logo Design • UX Research • User Experience Design (UED) • Web Design
-            </p>
-            <button className="text-blue-600 text-sm mt-2 hover:underline">Show all skills →</button>
-          </div>
-          
-          <div>
-            <h3 className="text-lg font-semibold mb-4">Portfolio:</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              <div className="aspect-square bg-gray-200 rounded-lg overflow-hidden"></div>
-              <div className="aspect-square bg-gray-200 rounded-lg overflow-hidden"></div>
-              <div className="aspect-square bg-gray-200 rounded-lg overflow-hidden"></div>
-            </div>
+            <p className="text-gray-700">{reviews[currentReviewIndex].text}</p>
           </div>
         </div>
       </div>
