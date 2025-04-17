@@ -9,7 +9,7 @@ function CheckIcon() {
   );
 }
 
-function PricingTable() {
+function SubscriptionPage() {
   const plans = [
     {
       name: "Basic",
@@ -106,4 +106,4 @@ function PricingTable() {
   );
 }
 
-export default PricingTable;
+export default SubscriptionPage;
