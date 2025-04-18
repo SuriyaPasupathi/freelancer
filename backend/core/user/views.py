@@ -50,13 +50,12 @@ class CustomLoginView(APIView):
 @permission_classes([IsAuthenticated])
 def createaccount(request):
     user = request.user
-    data = request.data.copy()
-    data['user'] = user.id  # Assign the logged-in user ID
+    profile, created = UserProfile.objects.get_or_create(user=user)
 
-    serializer = UserProfileSerializer(data=data)
+    serializer = UserProfileSerializer(profile, data=request.data, partial=True)
     if serializer.is_valid():
-        serializer.save(user=user)  # Set the user object explicitly
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        serializer.save()
+        return Response({'message': 'Profile saved successfully'}, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class UserProfileViewSet(viewsets.ModelViewSet):

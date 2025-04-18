@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom'; // 👈 for navigation
+import { useNavigate } from 'react-router-dom';
 
 function CheckIcon() {
   return (
@@ -16,6 +16,7 @@ function SubscriptionPage() {
     {
       name: "Basic",
       price: "Free",
+      type: "free",
       popular: false,
       features: [
         "Profile Name and Image",
@@ -28,6 +29,7 @@ function SubscriptionPage() {
     {
       name: "Premium",
       price: "20",
+      type: "premium",
       popular: true,
       features: [
         "Profile Name and Image",
@@ -45,13 +47,14 @@ function SubscriptionPage() {
     {
       name: "Standard",
       price: "10",
+      type: "standard",
       popular: false,
       features: [
         "Profile Name and Image",
         "Review Ratings",
         "Job Title and Job Specialization",
         "Client's Previous Reviews",
-        "Copy URL Link", 
+        "Copy URL Link",
         "Email, Mobile and Social Media Link",
         "Displays Services, Experiences, Skills and Tools"
       ]
@@ -59,7 +62,7 @@ function SubscriptionPage() {
   ];
 
   const handleSignup = (plan) => {
-    navigate("/CreateAccount", { state: { selectedFeatures: plan.features, planName: plan.name } });
+    navigate("/CreateAccount", { state: { subscription_type: plan.type } });
   };
 
   return (
