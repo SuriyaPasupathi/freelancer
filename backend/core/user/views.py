@@ -9,7 +9,7 @@ from django.utils.timezone import now
 from django.core.mail import send_mail
 from django.contrib.auth import get_user_model
 from .serializers import RegisterSerializer, UserProfileSerializer, ForgotPasswordSerializer, ResetPasswordSerializer,ReviewSerializer
-from .models import CustomUser,UserProfile,Review  # Assuming CustomUser is the model for your custom user
+from .models import UserProfile,Review  # Assuming CustomUser is the model for your custom user
 from rest_framework.permissions import IsAuthenticated
 
 
@@ -44,6 +44,55 @@ class CustomLoginView(APIView):
             })
 
         return Response({"detail": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
+class UserProfileViewSet(viewsets.ModelViewSet):
+    queryset = UserProfile.objects.all()
+    serializer_class = UserProfileSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_queryset(self):
+        # Regular users can only see their own profile
+        if self.request.user.is_staff:
+            return UserProfile.objects.all()
+        return UserProfile.objects.filter(user=self.request.user)
+    
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+    
+    @action(detail=True, methods=['post'])
+    def upgrade_subscription(self, request, pk=None):
+        profile = self.get_object()
+        subscription_type = request.data.get('subscription_type')
+        
+        if subscription_type not in [choice[0] for choice in UserProfile.SUBSCRIPTION_CHOICES]:
+            return Response(
+                {'error': 'Invalid subscription type'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        profile.subscription_type = subscription_type
+        profile.save()
+        return Response({'status': 'subscription updated'})
+
+
+class ReviewViewSet(viewsets.ModelViewSet):
+    queryset = Review.objects.all()
+    serializer_class = ReviewSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    
+    def perform_create(self, serializer):
+        profile_id = self.request.data.get('profile_id')
+        try:
+            profile = UserProfile.objects.get(id=profile_id)
+            serializer.save(profile=profile)
+        except UserProfile.DoesNotExist:
+            return Response(
+                {'error': 'Profile not found'}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+
+
+
 
 
 # # ✅ Get My Account (User Profile)
@@ -118,56 +167,3 @@ class CustomLoginView(APIView):
 #         user.save()
 
 #         return Response({"message": f"Subscription updated to {subscription_level}."})
-
-
-
-
-
-
-
-class UserProfileViewSet(viewsets.ModelViewSet):
-    queryset = UserProfile.objects.all()
-    serializer_class = UserProfileSerializer
-    permission_classes = [permissions.IsAuthenticated]
-    
-    def get_queryset(self):
-        # Regular users can only see their own profile
-        if self.request.user.is_staff:
-            return UserProfile.objects.all()
-        return UserProfile.objects.filter(user=self.request.user)
-    
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
-    
-    @action(detail=True, methods=['post'])
-    def upgrade_subscription(self, request, pk=None):
-        profile = self.get_object()
-        subscription_type = request.data.get('subscription_type')
-        
-        if subscription_type not in [choice[0] for choice in UserProfile.SUBSCRIPTION_CHOICES]:
-            return Response(
-                {'error': 'Invalid subscription type'}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        profile.subscription_type = subscription_type
-        profile.save()
-        return Response({'status': 'subscription updated'})
-
-
-
-class ReviewViewSet(viewsets.ModelViewSet):
-    queryset = Review.objects.all()
-    serializer_class = ReviewSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-    
-    def perform_create(self, serializer):
-        profile_id = self.request.data.get('profile_id')
-        try:
-            profile = UserProfile.objects.get(id=profile_id)
-            serializer.save(profile=profile)
-        except UserProfile.DoesNotExist:
-            return Response(
-                {'error': 'Profile not found'}, 
-                status=status.HTTP_404_NOT_FOUND
-            )

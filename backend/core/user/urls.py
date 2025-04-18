@@ -1,14 +1,13 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import RegisterView, CustomLoginView, MyAccountView, ForgotPasswordView, ResetPasswordView
-from .views import views
+from .views import RegisterView, CustomLoginView, UserProfileViewSet, ReviewViewSet
+
 router = DefaultRouter()
-router.register(r'profiles', views.UserProfileViewSet)
-router.register(r'reviews', views.ReviewViewSet)
+router.register(r'profiles', UserProfileViewSet)
+router.register(r'reviews', ReviewViewSet)
+
 urlpatterns = [
     path('register/', RegisterView.as_view(), name='register'),
-    path('login/', CustomLoginView.as_view(), name='login'),  # <-- Add this!
-    path('me/', MyAccountView.as_view(), name='me'),
-    path('forgot-password/', ForgotPasswordView.as_view(), name='forgot-password'),
-    path('reset-password/', ResetPasswordView.as_view(), name='reset-password'),
+    path('login/', CustomLoginView.as_view(), name='login'),
+    path('', include(router.urls)),  # ✅ include ViewSet-based routes
 ]
