@@ -19,28 +19,87 @@ class CustomUser(AbstractUser):
 class UserProfile(models.Model):
     SUBSCRIPTION_CHOICES = [
         ('free', 'Free'),
-        ('basic', 'Basic'),
+        ('standard', 'Standard'),  # Changed from 'basic' to match your React component
         ('premium', 'Premium'),
     ]
-
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    role = models.CharField(max_length=50)
-    profile_pic = models.ImageField(upload_to='profiles/', null=True, blank=True)
-    rating = models.FloatField(default=0)
-    reviews = models.TextField(blank=True)
-
+    
+    # User relationship
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='profile')
     subscription_type = models.CharField(max_length=10, choices=SUBSCRIPTION_CHOICES, default='free')
-
-    # Basic Plan fields
-    about = models.TextField(blank=True)
-    phone_number = models.CharField(max_length=15, blank=True)
-    email = models.EmailField(blank=True)
-    dob = models.DateField(null=True, blank=True)
-
-    # Premium Plan fields
+    
+    # Free tier fields
+    name = models.CharField(max_length=100)
+    profile_pic = models.ImageField(upload_to='profiles/', null=True, blank=True)
+    job_title = models.CharField(max_length=100)
+    job_specialization = models.CharField(max_length=100)
+    rating = models.FloatField(default=0)  # For review ratings
+    
+    # URL for profile sharing
+    profile_url = models.CharField(max_length=100, unique=True, blank=True, null=True)
+    
+    # Standard tier fields
+    email = models.EmailField(blank=True)  # Additional contact email (beyond user.email)
+    mobile = models.CharField(max_length=15, blank=True)
+    services = models.TextField(blank=True)
+    experiences = models.TextField(blank=True)
     skills = models.TextField(blank=True)
-    education_history = models.TextField(blank=True)
-    experience_history = models.TextField(blank=True)
-
+    tools = models.TextField(blank=True)
+    
+    # Premium tier fields
+    education = models.TextField(blank=True)
+    certifications = models.TextField(blank=True)
+    video_intro = models.FileField(upload_to='videos/', null=True, blank=True)
+    portfolio = models.TextField(blank=True)
+    
     def __str__(self):
-        return self.user.username
+        return self.name
+    
+    def save(self, *args, **kwargs):
+        # Generate a unique profile URL if not provided
+        if not self.profile_url:
+            import uuid
+            self.profile_url = str(uuid.uuid4())[:8]
+        super().save(*args, **kwargs)
+
+
+class SocialLink(models.Model):
+    """Separate model for social media links to keep the data structure clean"""
+    PLATFORM_CHOICES = [
+        ('linkedin', 'LinkedIn'),
+        ('facebook', 'Facebook'),
+        ('twitter', 'Twitter'),
+        ('instagram', 'Instagram'),
+        ('github', 'GitHub'),
+        ('other', 'Other'),
+    ]
+    
+    user_profile = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='social_links')
+    platform = models.CharField(max_length=20, choices=PLATFORM_CHOICES)
+    url = models.URLField()
+    
+    class Meta:
+        unique_together = ('user_profile', 'platform')
+    
+    def __str__(self):
+        return f"{self.user_profile.name}'s {self.get_platform_display()}"
+
+
+class Review(models.Model):
+    """Model for client reviews"""
+    profile = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='client_reviews')
+    reviewer_name = models.CharField(max_length=100)
+    rating = models.IntegerField(choices=[(i, i) for i in range(1, 6)])  # 1-5 star rating
+    comment = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"Review for {self.profile.name} by {self.reviewer_name}"
+    
+    def save(self, *args, **kwargs):
+        # Update the average rating on the profile when a review is saved
+        super().save(*args, **kwargs)
+        profile = self.profile
+        reviews = profile.client_reviews.all()
+        if reviews:
+            profile.rating = sum(review.rating for review in reviews) / reviews.count()
+            profile.save(update_fields=['rating'])

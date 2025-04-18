@@ -1,17 +1,17 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
-from .models import UserProfile
+from .models import UserProfile, SocialLink, Review
 
 User = get_user_model()
 
 # ----------------------
 # ✅ UserProfile Serializer (for profile model)
 # ----------------------
-class UserProfileSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = UserProfile
-        fields = '__all__'
+# class UserProfileSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = UserProfile
+#         fields = '__all__'
 
 
 # ----------------------
@@ -52,8 +52,7 @@ class ResetPasswordSerializer(serializers.Serializer):
 # ----------------------
 # ✅ Subscription Level Update
 # ----------------------
-class SubscriptionUpdateSerializer(serializers.Serializer):
-    subscription_level = serializers.ChoiceField(choices=['free', 'basic', 'premium'])
+
 
 
 # ----------------------
@@ -63,3 +62,99 @@ class BasicUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'username', 'email')
+
+
+
+User = get_user_model()
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'email')
+
+
+class SocialLinkSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SocialLink
+        fields = ('id', 'platform', 'url')
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Review
+        fields = ('id', 'reviewer_name', 'rating', 'comment', 'created_at')
+
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+    social_links = SocialLinkSerializer(many=True, read_only=True)
+    client_reviews = ReviewSerializer(many=True, read_only=True)
+    
+    # Fields for nested creation
+    linkedin = serializers.URLField(write_only=True, required=False, allow_blank=True)
+    facebook = serializers.URLField(write_only=True, required=False, allow_blank=True)
+    twitter = serializers.URLField(write_only=True, required=False, allow_blank=True)
+    
+    class Meta:
+        model = UserProfile
+        fields = (
+            'id', 'user', 'subscription_type', 'name', 'profile_pic', 'job_title', 
+            'job_specialization', 'rating', 'profile_url', 'email', 'mobile',
+            'services', 'experiences', 'skills', 'tools', 'education', 'certifications',
+            'video_intro', 'portfolio', 'social_links', 'client_reviews',
+            # Write-only fields for social links
+            'linkedin', 'facebook', 'twitter'
+        )
+    
+    def create(self, validated_data):
+        # Extract social links data
+        linkedin = validated_data.pop('linkedin', None)
+        facebook = validated_data.pop('facebook', None)
+        twitter = validated_data.pop('twitter', None)
+        
+        # Create profile
+        profile = UserProfile.objects.create(**validated_data)
+        
+        # Create social links if provided
+        social_links = []
+        if linkedin:
+            social_links.append(SocialLink(user_profile=profile, platform='linkedin', url=linkedin))
+        if facebook:
+            social_links.append(SocialLink(user_profile=profile, platform='facebook', url=facebook))
+        if twitter:
+            social_links.append(SocialLink(user_profile=profile, platform='twitter', url=twitter))
+        
+        if social_links:
+            SocialLink.objects.bulk_create(social_links)
+        
+        return profile
+    
+    def update(self, instance, validated_data):
+        # Extract social links data
+        linkedin = validated_data.pop('linkedin', None)
+        facebook = validated_data.pop('facebook', None)
+        twitter = validated_data.pop('twitter', None)
+        
+        # Update profile
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        
+        # Update social links
+        if linkedin is not None:
+            SocialLink.objects.update_or_create(
+                user_profile=instance, platform='linkedin',
+                defaults={'url': linkedin}
+            )
+        if facebook is not None:
+            SocialLink.objects.update_or_create(
+                user_profile=instance, platform='facebook',
+                defaults={'url': facebook}
+            )
+        if twitter is not None:
+            SocialLink.objects.update_or_create(
+                user_profile=instance, platform='twitter',
+                defaults={'url': twitter}
+            )
+        
+        return instance
