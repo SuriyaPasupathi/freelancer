@@ -5,26 +5,7 @@ import { IoChevronBack, IoChevronForward } from 'react-icons/io5';
 const ProfilePage = () => {
   const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
 
-  const reviews = [
-    {
-      author: "Ava Wright",
-      position: "CEO • Strategi Inc",
-      rating: 5,
-      text: "Lorem ipsum dolor sit amet. Et unde quisquam et facilis nisi sed expedita nemo est neque incidunt sed deserunt harum est velit galisum in ducimus cupiditate."
-    },
-    {
-      author: "Byron Robertson",
-      position: "CEO • Strategi Inc",
-      rating: 5,
-      text: "Lorem ipsum dolor sit amet. Et unde quisquam et facilis nisi sed expedita nemo est neque incidunt sed deserunt harum est velit galisum in ducimus cupiditate."
-    },
-    {
-      author: "April Thomson",
-      position: "Consultant • Bright Sparks",
-      rating: 5,
-      text: "Lorem ipsum dolor sit amet. Et unde quisquam et facilis nisi sed expedita nemo est neque incidunt sed deserunt harum est velit galisum in ducimus cupiditate."
-    }
-  ];
+  
 
   const renderStars = (rating) => {
     const stars = [];

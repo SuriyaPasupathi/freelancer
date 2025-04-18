@@ -50,10 +50,17 @@ class UserProfileViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     
     def get_queryset(self):
-        # Regular users can only see their own profile
-        if self.request.user.is_staff:
-            return UserProfile.objects.all()
-        return UserProfile.objects.filter(user=self.request.user)
+        queryset = super().get_queryset()
+
+        if not self.request.user.is_staff:
+            queryset = queryset.filter(user=self.request.user)
+
+        subscription = self.request.query_params.get('subscription')
+        if subscription:
+            queryset = queryset.filter(subscription_type=subscription)
+
+        return queryset
+
     
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)

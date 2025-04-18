@@ -5,9 +5,11 @@ from .views import RegisterView, CustomLoginView, UserProfileViewSet, ReviewView
 router = DefaultRouter()
 router.register(r'profiles', UserProfileViewSet)
 router.register(r'reviews', ReviewViewSet)
+router.register(r'profiles', UserProfileViewSet, basename='profiles')
 
 urlpatterns = [
     path('register/', RegisterView.as_view(), name='register'),
     path('login/', CustomLoginView.as_view(), name='login'),
     path('', include(router.urls)),  # ✅ include ViewSet-based routes
+    path('api/', include(router.urls))
 ]
