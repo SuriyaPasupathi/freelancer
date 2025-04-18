@@ -59,7 +59,7 @@ function SubscriptionPage() {
   ];
 
   const handleSignup = (plan) => {
-    navigate("/Userprofile", { state: { selectedFeatures: plan.features, planName: plan.name } });
+    navigate("/CreateAccount", { state: { selectedFeatures: plan.features, planName: plan.name } });
   };
 
   return (

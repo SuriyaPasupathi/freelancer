@@ -5,6 +5,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import Register from "./pages/Register";
 import LoginForm from "./components/auth/LoginForm";
 import SubscriptionPage from "./pages/subscriptions";
+import CreateAccount from "./pages/CreateAccount";
 import ForgotPassword from "./pages/ForgotPassword";
 
 import ProfilePage from "./pages/Userprofile";
@@ -17,6 +18,7 @@ const App = () => {
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<LoginForm />} />
         <Route path="/ForgotPassword" element={<ForgotPassword />} />
+        <Route path="/CreateAccount" element={<CreateAccount />} />
 
         {/* App Pages */}
   
