@@ -16,7 +16,7 @@ media/
 staticfiles/
 local_settings.py
 migrations/
-
+profiles/
 # Virtual environment
 env/
 venv/

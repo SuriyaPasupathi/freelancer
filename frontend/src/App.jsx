@@ -15,7 +15,7 @@ const App = () => {
     <Router>
       <Routes>
         {/* Auth Routes */}
-        <Route path="/register" element={<Register />} />
+        <Route path="/" element={<Register />} />
         <Route path="/login" element={<LoginForm />} />
         <Route path="/ForgotPassword" element={<ForgotPassword />} />
         <Route path="/CreateAccount" element={<CreateAccount />} />
