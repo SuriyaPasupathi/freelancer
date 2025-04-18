@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { login } from '../../api/auth';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 const LoginForm = () => {
   const [form, setForm] = useState({ email: '', password: '' });
@@ -12,11 +12,22 @@ const LoginForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     try {
-      const response = await login(form);
-      localStorage.setItem('access', response.data.access); // Save token
+      const response = await axios.post('http://127.0.0.1:8000/api/login/', {
+        email: form.email,
+        password: form.password,
+      });
+
+      const { access, refresh, user } = response.data;
+
+      // Save tokens and user info
+      localStorage.setItem('access', access);
+      localStorage.setItem('refresh', refresh);
+      localStorage.setItem('user', JSON.stringify(user));
+
       alert('Login successful');
-      navigate('/subscription'); // Or wherever your protected route is
+      navigate('/subscription');
     } catch (err) {
       console.error("Login failed:", err.response?.data || err.message);
       alert('Invalid email or password');

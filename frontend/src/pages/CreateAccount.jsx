@@ -2,87 +2,51 @@ import React, { useState } from "react";
 import axios from "axios";
 
 const CreateAccount = () => {
-  const [subscription, setSubscription] = useState("free");
+  const [subscription_type, setSubscriptionType] = useState("free");
   const [formData, setFormData] = useState({
     name: "",
-    profilePic: null,
-    jobTitle: "",
-    jobSpecialization: "",
+    profile_pic: null,
+    job_title: "",
+    job_specialization: "",
     email: "",
     mobile: "",
-    socialLinks: {
-      linkedin: "",
-      facebook: "",
-      twitter: ""
-    },
     services: "",
     experiences: "",
     skills: "",
     tools: "",
     education: "",
     certifications: "",
-    videoIntro: "",
+    video_intro: null,
     portfolio: ""
   });
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
-
-    if (name.includes(".")) {
-      const [parent, child] = name.split(".");
-      setFormData((prev) => ({
-        ...prev,
-        [parent]: {
-          ...prev[parent],
-          [child]: value
-        }
-      }));
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: files ? files[0] : value,
-      }));
-    }
+    setFormData((prev) => ({
+      ...prev,
+      [name]: files ? files[0] : value
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const token = localStorage.getItem("access");
 
     const form = new FormData();
-    form.append("subscription", subscription);
-    form.append("name", formData.name);
-    form.append("jobTitle", formData.jobTitle);
-    form.append("jobSpecialization", formData.jobSpecialization);
-    if (formData.profilePic) {
-      form.append("profilePic", formData.profilePic);
-    }
-
-    if (subscription !== "free") {
-      form.append("email", formData.email);
-      form.append("mobile", formData.mobile);
-      form.append("services", formData.services);
-      form.append("experiences", formData.experiences);
-      form.append("skills", formData.skills);
-      form.append("tools", formData.tools);
-      form.append("socialLinks.linkedin", formData.socialLinks.linkedin);
-      form.append("socialLinks.facebook", formData.socialLinks.facebook);
-      form.append("socialLinks.twitter", formData.socialLinks.twitter);
-    }
-
-    if (subscription === "premium") {
-      form.append("education", formData.education);
-      form.append("certifications", formData.certifications);
-      form.append("videoIntro", formData.videoIntro);
-      form.append("portfolio", formData.portfolio);
-    }
+    form.append("subscription_type", subscription_type);
+    Object.entries(formData).forEach(([key, value]) => {
+      if (value) {
+        form.append(key, value);
+      }
+    });
 
     try {
-      const res = await axios.post("http://localhost:8000/api/profiles/", form, {
+      const res = await axios.post("http://localhost:8000/api/createaccount/", form, {
         headers: {
           "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
         },
       });
-      console.log("Success:", res.data);
       alert("Account created successfully!");
     } catch (error) {
       console.error("Error:", error.response?.data || error.message);
@@ -92,93 +56,55 @@ const CreateAccount = () => {
 
   return (
     <div className="max-w-3xl mx-auto p-6 bg-white rounded-lg shadow-md">
-      <h1 className="text-2xl font-bold mb-6 text-center">Create Your Professional Profile</h1>
+      <h1 className="text-2xl font-bold mb-6 text-center">Create Your Profile</h1>
 
+      <div className="mb-4">
+        <label className="mr-2 font-medium">Select Subscription:</label>
+        <select value={subscription_type} onChange={(e) => setSubscriptionType(e.target.value)} className="p-2 border rounded-md">
+          <option value="free">Free</option>
+          <option value="standard">Standard</option>
+          <option value="premium">Premium</option>
+        </select>
+      </div>
 
-      {/* Registration Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Free Plan Fields */}
+        {/* Free Tier Fields */}
         <div className="p-4 border rounded-lg bg-white">
-          <h2 className="text-lg font-semibold mb-4">Basic Information</h2>
+          <h2 className="text-lg font-semibold mb-4">Basic Info</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Full Name *</label>
-              <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                className="w-full p-2 border rounded-md"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Profile Picture</label>
-              <input
-                type="file"
-                name="profilePic"
-                accept="image/*"
-                onChange={handleChange}
-                className="w-full p-2 border rounded-md"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Job Title *</label>
-              <input
-                type="text"
-                name="jobTitle"
-                value={formData.jobTitle}
-                onChange={handleChange}
-                className="w-full p-2 border rounded-md"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Job Specialization *</label>
-              <input
-                type="text"
-                name="jobSpecialization"
-                value={formData.jobSpecialization}
-                onChange={handleChange}
-                className="w-full p-2 border rounded-md"
-                required
-              />
-            </div>
+            <input name="name" value={formData.name} onChange={handleChange} placeholder="Full Name" className="w-full p-2 border rounded-md" required />
+            <input type="file" name="profile_pic" accept="image/*" onChange={handleChange} className="w-full p-2 border rounded-md" />
+            <input name="job_title" value={formData.job_title} onChange={handleChange} placeholder="Job Title" className="w-full p-2 border rounded-md" required />
+            <input name="job_specialization" value={formData.job_specialization} onChange={handleChange} placeholder="Specialization" className="w-full p-2 border rounded-md" required />
           </div>
         </div>
 
-        {/* Standard Plan Fields */}
-        <div className={`p-4 border rounded-lg ${subscription === "free" ? "bg-gray-100 opacity-60" : "bg-white"}`}>
-          <fieldset disabled={subscription === "free"} className="space-y-4">
-            <h2 className="text-lg font-semibold mb-2">Contact & Professional Details</h2>
+        {/* Standard Tier */}
+        <div className={`p-4 border rounded-lg ${subscription_type === "free" ? "bg-gray-100 opacity-60" : "bg-white"}`}>
+          <fieldset disabled={subscription_type === "free"} className="space-y-4">
+            <h2 className="text-lg font-semibold mb-2">Standard Details</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input type="email" name="email" placeholder="Email" value={formData.email} onChange={handleChange} className="w-full p-2 border rounded-md" />
-              <input type="tel" name="mobile" placeholder="Mobile" value={formData.mobile} onChange={handleChange} className="w-full p-2 border rounded-md" />
+              <input name="email" type="email" value={formData.email} onChange={handleChange} placeholder="Email" className="w-full p-2 border rounded-md" />
+              <input name="mobile" value={formData.mobile} onChange={handleChange} placeholder="Mobile" className="w-full p-2 border rounded-md" />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-              <input type="url" name="socialLinks.linkedin" placeholder="LinkedIn" value={formData.socialLinks.linkedin} onChange={handleChange} className="w-full p-2 border rounded-md" />
-              <input type="url" name="socialLinks.facebook" placeholder="Facebook" value={formData.socialLinks.facebook} onChange={handleChange} className="w-full p-2 border rounded-md" />
-              <input type="url" name="socialLinks.twitter" placeholder="Twitter" value={formData.socialLinks.twitter} onChange={handleChange} className="w-full p-2 border rounded-md" />
-            </div>
-            <textarea name="services" placeholder="Services Offered" value={formData.services} onChange={handleChange} className="w-full p-2 border rounded-md" />
-            <textarea name="experiences" placeholder="Experience" value={formData.experiences} onChange={handleChange} className="w-full p-2 border rounded-md" />
-            <textarea name="skills" placeholder="Skills" value={formData.skills} onChange={handleChange} className="w-full p-2 border rounded-md" />
-            <textarea name="tools" placeholder="Tools" value={formData.tools} onChange={handleChange} className="w-full p-2 border rounded-md" />
+            <textarea name="services" value={formData.services} onChange={handleChange} placeholder="Services" className="w-full p-2 border rounded-md" />
+            <textarea name="experiences" value={formData.experiences} onChange={handleChange} placeholder="Experience" className="w-full p-2 border rounded-md" />
+            <textarea name="skills" value={formData.skills} onChange={handleChange} placeholder="Skills" className="w-full p-2 border rounded-md" />
+            <textarea name="tools" value={formData.tools} onChange={handleChange} placeholder="Tools" className="w-full p-2 border rounded-md" />
           </fieldset>
         </div>
 
-        {/* Premium Plan Fields */}
-        <div className={`p-4 border rounded-lg ${subscription === "premium" ? "bg-white" : "bg-gray-100 opacity-60"}`}>
-          <fieldset disabled={subscription !== "premium"} className="space-y-4">
+        {/* Premium Tier */}
+        <div className={`p-4 border rounded-lg ${subscription_type === "premium" ? "bg-white" : "bg-gray-100 opacity-60"}`}>
+          <fieldset disabled={subscription_type !== "premium"} className="space-y-4">
             <h2 className="text-lg font-semibold mb-2">Premium Add-ons</h2>
-            <input type="text" name="education" placeholder="Education" value={formData.education} onChange={handleChange} className="w-full p-2 border rounded-md" />
-            <input type="text" name="certifications" placeholder="Certifications" value={formData.certifications} onChange={handleChange} className="w-full p-2 border rounded-md" />
-            <input type="text" name="videoIntro" placeholder="Video Intro (URL)" value={formData.videoIntro} onChange={handleChange} className="w-full p-2 border rounded-md" />
-            <input type="text" name="portfolio" placeholder="Portfolio URL" value={formData.portfolio} onChange={handleChange} className="w-full p-2 border rounded-md" />
+            <input name="education" value={formData.education} onChange={handleChange} placeholder="Education" className="w-full p-2 border rounded-md" />
+            <input name="certifications" value={formData.certifications} onChange={handleChange} placeholder="Certifications" className="w-full p-2 border rounded-md" />
+            <input type="file" name="video_intro" accept="video/*" onChange={handleChange} className="w-full p-2 border rounded-md" />
+            <input name="portfolio" value={formData.portfolio} onChange={handleChange} placeholder="Portfolio URL" className="w-full p-2 border rounded-md" />
           </fieldset>
         </div>
 
-        {/* Submit */}
         <div className="text-center">
           <button type="submit" className="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700">
             Create Profile
