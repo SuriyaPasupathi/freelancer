@@ -26,8 +26,22 @@ const LoginForm = () => {
       localStorage.setItem('refresh', refresh);
       localStorage.setItem('user', JSON.stringify(user));
 
-      alert('Login successful');
-      navigate('/subscription');
+      // ✅ Check profile status
+      const profileRes = await axios.get("http://localhost:8000/api/profile_status/", {
+
+        headers: {
+          Authorization: `Bearer ${access}`,
+        },
+      });
+
+      const { has_profile } = profileRes.data;
+
+      if (has_profile) {
+        navigate('/Userprofile');  // go to profile page
+      } else {
+        navigate('/subscription');  // go to subscription page first
+      }
+
     } catch (err) {
       console.error("Login failed:", err.response?.data || err.message);
       alert('Invalid email or password');
