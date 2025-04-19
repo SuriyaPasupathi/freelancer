@@ -110,7 +110,20 @@ class ReviewViewSet(viewsets.ModelViewSet):
                 {'error': 'Profile not found'}, 
                 status=status.HTTP_404_NOT_FOUND
             )
-        
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def get_profile(request):
+    try:
+        profile = UserProfile.objects.get(user=request.user)
+    except UserProfile.DoesNotExist:
+        return Response({'detail': 'Profile does not exist.'}, status=status.HTTP_404_NOT_FOUND)
+
+    serializer = UserProfileSerializer(profile, data=request.data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response({'message': 'Profile updated successfully'}, status=status.HTTP_200_OK)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 

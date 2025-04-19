@@ -73,10 +73,11 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ('id', 'username', 'email')
 
 
+
 class SocialLinkSerializer(serializers.ModelSerializer):
     class Meta:
         model = SocialLink
-        fields = ('id', 'platform', 'url')
+        fields = ['platform', 'url']
 
 
 class ReviewSerializer(serializers.ModelSerializer):

@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const CreateAccount = () => {
   const location = useLocation();
+  const navigate = useNavigate(); // ✅ used for navigation
   const [subscriptionType, setSubscriptionType] = useState("free");
 
   const [formData, setFormData] = useState({
@@ -43,7 +44,6 @@ const CreateAccount = () => {
 
     const form = new FormData();
     form.append("subscription_type", subscriptionType);
-
     for (const [key, value] of Object.entries(formData)) {
       if (value) form.append(key, value);
     }
@@ -55,8 +55,13 @@ const CreateAccount = () => {
           Authorization: `Bearer ${token}`,
         },
       });
+
       alert("Account created successfully!");
-      // Clear form if needed: setFormData({...});
+
+      // ✅ Redirect to user profile page and pass response data
+      navigate("/userprofile", {
+        state: { profile: res.data },
+      });
     } catch (error) {
       console.error("Error:", error.response?.data || error.message);
       alert("Failed to create account.");
