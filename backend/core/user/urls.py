@@ -11,7 +11,6 @@ urlpatterns = [
     path('login/', CustomLoginView.as_view(), name='login'),
     path('createaccount/', createaccount, name='create-account'),
     path('profile_status/', CheckProfileStatusView.as_view(), name='profile-status'),
-
     path('api/', include(router.urls))  # ✅ Stick to this pattern
 ]
 
