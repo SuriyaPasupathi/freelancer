@@ -193,6 +193,5 @@ class PasswordResetConfirmView(APIView):
                 return Response({"message": "Password reset successful."})
             else:
                 return Response({"error": "Invalid token."}, status=status.HTTP_400_BAD_REQUEST)
-
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
