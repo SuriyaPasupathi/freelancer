@@ -129,5 +129,14 @@ class CheckProfileStatusView(APIView):
 
 
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_profile(request):
+    try:
+        profile = UserProfile.objects.get(user=request.user)
+    except UserProfile.DoesNotExist:
+        return Response({'detail': 'Profile does not exist.'}, status=status.HTTP_404_NOT_FOUND)
 
+    serializer = UserProfileSerializer(profile)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 

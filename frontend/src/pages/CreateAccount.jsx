@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const CreateAccount = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [subscriptionType, setSubscriptionType] = useState("free");
 
   const [formData, setFormData] = useState({
@@ -43,20 +44,20 @@ const CreateAccount = () => {
 
     const form = new FormData();
     form.append("subscription_type", subscriptionType);
-
     for (const [key, value] of Object.entries(formData)) {
       if (value) form.append(key, value);
     }
 
     try {
-      const res = await axios.post("http://localhost:8000/api/createaccount/", form, {
+      await axios.post("http://localhost:8000/api/createaccount/", form, {
         headers: {
           "Content-Type": "multipart/form-data",
           Authorization: `Bearer ${token}`,
         },
       });
+
       alert("Account created successfully!");
-      // Clear form if needed: setFormData({...});
+      navigate("/Userprofile"); // Redirect to profile page
     } catch (error) {
       console.error("Error:", error.response?.data || error.message);
       alert("Failed to create account.");
@@ -67,7 +68,6 @@ const CreateAccount = () => {
     <div className="max-w-3xl mx-auto p-6 bg-white rounded-lg shadow-md">
       <h1 className="text-2xl font-bold mb-6 text-center">Create Your Profile</h1>
 
-      {/* Subscription Type Selector */}
       <div className="mb-4">
         <label className="mr-2 font-medium">Subscription Type:</label>
         <select
@@ -82,8 +82,7 @@ const CreateAccount = () => {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-
-        {/* Free Tier */}
+        {/* Free */}
         <div className="p-4 border rounded-lg bg-white">
           <h2 className="text-lg font-semibold mb-4">Basic Info</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -94,7 +93,7 @@ const CreateAccount = () => {
           </div>
         </div>
 
-        {/* Standard Tier */}
+        {/* Standard */}
         {subscriptionType !== "free" && (
           <div className="p-4 border rounded-lg bg-white">
             <h2 className="text-lg font-semibold mb-2">Standard Details</h2>
@@ -109,7 +108,7 @@ const CreateAccount = () => {
           </div>
         )}
 
-        {/* Premium Tier */}
+        {/* Premium */}
         {subscriptionType === "premium" && (
           <div className="p-4 border rounded-lg bg-white">
             <h2 className="text-lg font-semibold mb-2">Premium Add-ons</h2>
