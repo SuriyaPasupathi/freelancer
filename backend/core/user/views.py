@@ -131,7 +131,7 @@ class CheckProfileStatusView(APIView):
             serializer = UserProfileSerializer(profile, context={"request": request})
             return Response({
                 "has_profile": True,
-                "profile": serializer.data
+                # "profile": serializer.data
             }, status=status.HTTP_200_OK)
         except UserProfile.DoesNotExist:
             return Response({"has_profile": False}, status=status.HTTP_200_OK)  
