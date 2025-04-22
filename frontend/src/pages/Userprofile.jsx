@@ -21,12 +21,45 @@ const Userprofile = () => {
       });
   }, []);
 
+  const handleLogout = async () => {
+    const refresh = localStorage.getItem("refresh");
+    const access = localStorage.getItem("access");
+
+    try {
+      await axios.post(
+        "http://localhost:8000/api/logout/",
+        { refresh },
+        {
+          headers: {
+            Authorization: `Bearer ${access}`, // ✅ Send access token here
+          },
+        }
+      );
+    } catch (err) {
+      console.error("Logout API error:", err.response?.data || err.message);
+    }
+
+    localStorage.removeItem("access");
+    localStorage.removeItem("refresh");
+    window.location.href = "/login";
+  };
+
   if (!profile) {
     return <div className="text-center mt-10 text-lg text-gray-600">Loading profile...</div>;
   }
 
   return (
     <div className="min-h-screen bg-gray-100 p-8">
+      {/* Logout Button */}
+      <div className="flex justify-end max-w-5xl mx-auto mb-4">
+        <button
+          onClick={handleLogout}
+          className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg shadow"
+        >
+          Logout
+        </button>
+      </div>
+
       <div className="bg-white rounded-xl shadow-lg p-10 max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
         {/* Left Column */}
         <div className="flex flex-col items-center md:items-start md:col-span-1">
@@ -62,8 +95,6 @@ const Userprofile = () => {
               <span>{profile.job_specialization || "Not specified"}</span>
             </div>
           </div>
-
-          {/* Future sections here (Education, Skills, etc.) */}
         </div>
       </div>
     </div>
