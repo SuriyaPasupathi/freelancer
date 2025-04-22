@@ -1,132 +1,171 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
-import { useLocation, useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+import axios from 'axios';
 
 const CreateAccount = () => {
   const location = useLocation();
-  const navigate = useNavigate();
-  const [subscriptionType, setSubscriptionType] = useState("free");
-
-  const [formData, setFormData] = useState({
-    name: "",
-    profile_pic: null,
-    job_title: "",
-    job_specialization: "",
-    email: "",
-    mobile: "",
-    services: "",
-    experiences: "",
-    skills: "",
-    tools: "",
-    education: "",
-    certifications: "",
-    video_intro: null,
-    portfolio: "",
-  });
+  const [subscriptionType, setSubscriptionType] = useState('free');
 
   useEffect(() => {
     if (location.state?.subscription_type) {
       setSubscriptionType(location.state.subscription_type);
     }
-  }, [location.state]);
+  }, [location]);
+
+  const [formData, setFormData] = useState({
+    name: '',
+    job_title: '',
+    job_specialization: '',
+    profile_pic: null,
+    email: '',
+    mobile: '',
+    services: '',
+    experiences: '',
+    skills: '',
+    tools: '',
+    education: '',
+    certifications: '',
+    portfolio: '',
+    video_intro: null
+  });
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: files ? files[0] : value,
-    }));
+    setFormData({
+      ...formData,
+      [name]: files ? files[0] : value
+    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem("access");
 
     const form = new FormData();
-    form.append("subscription_type", subscriptionType);
-    for (const [key, value] of Object.entries(formData)) {
-      if (value) form.append(key, value);
+    form.append('subscription_type', subscriptionType);
+    form.append('name', formData.name);
+    form.append('job_title', formData.job_title);
+    form.append('job_specialization', formData.job_specialization);
+    if (formData.profile_pic) form.append('profile_pic', formData.profile_pic);
+
+    if (subscriptionType === 'standard' || subscriptionType === 'premium') {
+      form.append('email', formData.email);
+      form.append('mobile', formData.mobile);
+      form.append('services', formData.services);
+      form.append('experiences', formData.experiences);
+      form.append('skills', formData.skills);
+      form.append('tools', formData.tools);
+    }
+
+    if (subscriptionType === 'premium') {
+      form.append('education', formData.education);
+      form.append('certifications', formData.certifications);
+      form.append('portfolio', formData.portfolio);
+      if (formData.video_intro) form.append('video_intro', formData.video_intro);
     }
 
     try {
-      await axios.post("http://localhost:8000/api/createaccount/", form, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await axios.post(
+        'http://127.0.0.1:8000/api/createaccount/',
+        form,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+          },
+        }
+      );
 
-      alert("Account created successfully!");
-      navigate("/Userprofile"); // Redirect to profile page
+      console.log('Account Created:', response.data);
+      alert('Profile created successfully!');
     } catch (error) {
-      console.error("Error:", error.response?.data || error.message);
-      alert("Failed to create account.");
+      console.error('Error creating profile:', error.response?.data || error.message);
+      alert('Failed to create profile.');
     }
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-6 bg-white rounded-lg shadow-md">
-      <h1 className="text-2xl font-bold mb-6 text-center">Create Your Profile</h1>
-
-      <div className="mb-4">
-        <label className="mr-2 font-medium">Subscription Type:</label>
-        <select
-          value={subscriptionType}
-          onChange={(e) => setSubscriptionType(e.target.value)}
-          className="p-2 border rounded-md"
-        >
-          <option value="free">Free</option>
-          <option value="standard">Standard</option>
-          <option value="premium">Premium</option>
-        </select>
-      </div>
+    <div className="max-w-3xl mx-auto mt-10 p-8 bg-white shadow-lg rounded-xl">
+      <h2 className="text-3xl font-bold mb-6 text-center capitalize text-blue-700">
+        {subscriptionType} Plan - Create Your Profile
+      </h2>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Free */}
-        <div className="p-4 border rounded-lg bg-white">
-          <h2 className="text-lg font-semibold mb-4">Basic Info</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input name="name" value={formData.name} onChange={handleChange} placeholder="Full Name" className="w-full p-2 border rounded-md" required />
-            <input type="file" name="profile_pic" accept="image/*" onChange={handleChange} className="w-full p-2 border rounded-md" />
-            <input name="job_title" value={formData.job_title} onChange={handleChange} placeholder="Job Title" className="w-full p-2 border rounded-md" required />
-            <input name="job_specialization" value={formData.job_specialization} onChange={handleChange} placeholder="Specialization" className="w-full p-2 border rounded-md" required />
-          </div>
-        </div>
-
-        {/* Standard */}
-        {subscriptionType !== "free" && (
-          <div className="p-4 border rounded-lg bg-white">
-            <h2 className="text-lg font-semibold mb-2">Standard Details</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="Email" className="w-full p-2 border rounded-md" required />
-              <input name="mobile" value={formData.mobile} onChange={handleChange} placeholder="Mobile" className="w-full p-2 border rounded-md" required />
-            </div>
-            <textarea name="services" value={formData.services} onChange={handleChange} placeholder="Services" className="w-full p-2 border rounded-md" />
-            <textarea name="experiences" value={formData.experiences} onChange={handleChange} placeholder="Experience" className="w-full p-2 border rounded-md" />
-            <textarea name="skills" value={formData.skills} onChange={handleChange} placeholder="Skills" className="w-full p-2 border rounded-md" />
-            <textarea name="tools" value={formData.tools} onChange={handleChange} placeholder="Tools" className="w-full p-2 border rounded-md" />
-          </div>
+        {(subscriptionType === 'free' || subscriptionType === 'standard' || subscriptionType === 'premium') && (
+          <>
+            <Input label="Name" name="name" value={formData.name} onChange={handleChange} />
+            <Input label="Job Title" name="job_title" value={formData.job_title} onChange={handleChange} />
+            <Input label="Job Specialization" name="job_specialization" value={formData.job_specialization} onChange={handleChange} />
+            <FileInput label="Profile Picture" name="profile_pic" onChange={handleChange} />
+          </>
         )}
 
-        {/* Premium */}
-        {subscriptionType === "premium" && (
-          <div className="p-4 border rounded-lg bg-white">
-            <h2 className="text-lg font-semibold mb-2">Premium Add-ons</h2>
-            <input name="education" value={formData.education} onChange={handleChange} placeholder="Education" className="w-full p-2 border rounded-md" />
-            <input name="certifications" value={formData.certifications} onChange={handleChange} placeholder="Certifications" className="w-full p-2 border rounded-md" />
-            <input type="file" name="video_intro" accept="video/*" onChange={handleChange} className="w-full p-2 border rounded-md" />
-            <input name="portfolio" value={formData.portfolio} onChange={handleChange} placeholder="Portfolio URL" className="w-full p-2 border rounded-md" />
-          </div>
+        {(subscriptionType === 'standard' || subscriptionType === 'premium') && (
+          <>
+            <Input label="Email" name="email" value={formData.email} onChange={handleChange} />
+            <Input label="Mobile" name="mobile" value={formData.mobile} onChange={handleChange} />
+            <TextArea label="Services" name="services" value={formData.services} onChange={handleChange} />
+            <TextArea label="Experiences" name="experiences" value={formData.experiences} onChange={handleChange} />
+            <TextArea label="Skills" name="skills" value={formData.skills} onChange={handleChange} />
+            <TextArea label="Tools" name="tools" value={formData.tools} onChange={handleChange} />
+          </>
         )}
 
-        <div className="text-center">
-          <button type="submit" className="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700">
-            Create Profile
-          </button>
-        </div>
+        {subscriptionType === 'premium' && (
+          <>
+            <TextArea label="Education" name="education" value={formData.education} onChange={handleChange} />
+            <TextArea label="Certifications" name="certifications" value={formData.certifications} onChange={handleChange} />
+            <TextArea label="Portfolio" name="portfolio" value={formData.portfolio} onChange={handleChange} />
+            <FileInput label="Video Introduction" name="video_intro" onChange={handleChange} />
+          </>
+        )}
+
+        <button
+          type="submit"
+          className="w-full py-3 bg-blue-600 text-white rounded-md font-semibold hover:bg-blue-700 transition"
+        >
+          Submit
+        </button>
       </form>
     </div>
   );
 };
+
+const Input = ({ label, name, value, onChange }) => (
+  <div>
+    <label className="block font-medium mb-1">{label}</label>
+    <input
+      type="text"
+      name={name}
+      value={value}
+      onChange={onChange}
+      className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-300"
+    />
+  </div>
+);
+
+const FileInput = ({ label, name, onChange }) => (
+  <div>
+    <label className="block font-medium mb-1">{label}</label>
+    <input
+      type="file"
+      name={name}
+      onChange={onChange}
+      className="w-full"
+    />
+  </div>
+);
+
+const TextArea = ({ label, name, value, onChange }) => (
+  <div>
+    <label className="block font-medium mb-1">{label}</label>
+    <textarea
+      name={name}
+      value={value}
+      onChange={onChange}
+      rows="3"
+      className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-300"
+    />
+  </div>
+);
 
 export default CreateAccount;
