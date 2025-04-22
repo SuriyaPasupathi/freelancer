@@ -161,7 +161,7 @@ class RequestResetPasswordView(APIView):
             uid = urlsafe_base64_encode(force_bytes(user.pk))
             token = default_token_generator.make_token(user)
 
-            reset_link = f"http://localhost:5173/reset-password?uid={uid}&token={token}"
+            reset_link = f"http://localhost:5173/ResetPassword?uid={uid}&token={token}"
 
             send_mail(
                 "Reset Your Password",
@@ -193,5 +193,20 @@ class PasswordResetConfirmView(APIView):
                 return Response({"message": "Password reset successful."})
             else:
                 return Response({"error": "Invalid token."}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        try:
+            refresh_token = request.data.get("refresh")
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+            return Response({"detail": "Logout successful."}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)

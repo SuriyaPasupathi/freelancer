@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { Briefcase, Star, Pencil } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Briefcase, Star } from "lucide-react";
 
 const Userprofile = () => {
   const [profile, setProfile] = useState(null);
@@ -23,6 +22,29 @@ const Userprofile = () => {
       });
   }, []);
 
+  const handleLogout = async () => {
+    const refresh = localStorage.getItem("refresh");
+    const access = localStorage.getItem("access");
+
+    try {
+      await axios.post(
+        "http://localhost:8000/api/logout/",
+        { refresh },
+        {
+          headers: {
+            Authorization: `Bearer ${access}`,
+          },
+        }
+      );
+    } catch (err) {
+      console.error("Logout API error:", err.response?.data || err.message);
+    }
+
+    localStorage.removeItem("access");
+    localStorage.removeItem("refresh");
+    window.location.href = "/login";
+  };
+
   if (!profile) {
     return (
       <div className="text-center mt-10 text-lg text-gray-600">
@@ -33,16 +55,7 @@ const Userprofile = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 p-8">
-      <div className="bg-white rounded-xl shadow-lg p-10 max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 relative">
-        {/* Edit icon */}
-        <button
-          className="absolute top-4 right-4 bg-gray-200 p-2 rounded-full hover:bg-green-500 transition"
-          title="Edit Profile"
-          onClick={() => navigate("/edit-profile")}
-        >
-          <Pencil className="w-5 h-5 text-gray-700 hover:text-white" />
-        </button>
-
+      <div className="bg-white rounded-xl shadow-lg p-10 max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
         {/* Left Column */}
         <div className="flex flex-col items-center md:items-start md:col-span-1">
           <div className="w-36 h-36 rounded-full overflow-hidden border-4 border-green-500 mb-4 shadow-md">
@@ -62,7 +75,7 @@ const Userprofile = () => {
           </p>
         </div>
 
-        {/* Right Column */}
+        {/* Right Side */}
         <div className="md:col-span-2 space-y-6">
           <div>
             <h3 className="text-xl font-semibold text-gray-700 mb-3 border-b pb-2">

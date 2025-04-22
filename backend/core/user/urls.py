@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import RegisterView, CustomLoginView, UserProfileViewSet, ReviewViewSet, createaccount, CheckProfileStatusView,get_profile,RequestResetPasswordView,PasswordResetConfirmView
+from .views import RegisterView, CustomLoginView, UserProfileViewSet, ReviewViewSet, createaccount, CheckProfileStatusView,get_profile,RequestResetPasswordView,PasswordResetConfirmView,LogoutView
 
 router = DefaultRouter()
 # router.register(r'profiles', UserProfileViewSet, basename='profiles')
@@ -14,6 +14,7 @@ urlpatterns = [
     path('get_profile/', get_profile, name='get-profile'),
     path('request-reset-password/', RequestResetPasswordView.as_view(), name='request-reset-password'),
     path('reset-password-confirm/', PasswordResetConfirmView.as_view(), name='password-reset-confirm'),
+    path('logout/', LogoutView.as_view(), name='logout'),
     path('api/', include(router.urls))  # ✅ Stick to this pattern
 ]
 

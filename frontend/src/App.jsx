@@ -7,7 +7,6 @@ import LoginForm from "./components/auth/LoginForm";
 import SubscriptionPage from "./pages/subscriptions";
 import CreateAccount from "./pages/CreateAccount";
 import ForgotPassword from "./pages/ForgotPassword";
-
 import ProfilePage from "./pages/Userprofile";
 import ResetPassword from "./pages/ResetPassword";
 
