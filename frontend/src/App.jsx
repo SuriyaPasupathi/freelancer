@@ -9,6 +9,7 @@ import CreateAccount from "./pages/CreateAccount";
 import ForgotPassword from "./pages/ForgotPassword";
 
 import ProfilePage from "./pages/Userprofile";
+import ResetPassword from "./pages/ResetPassword";
 
 const App = () => {
   return (
@@ -18,6 +19,7 @@ const App = () => {
         <Route path="/" element={<Register />} />
         <Route path="/login" element={<LoginForm />} />
         <Route path="/ForgotPassword" element={<ForgotPassword />} />
+        <Route path="/ResetPassword" element={<ResetPassword />} />
         <Route path="/CreateAccount" element={<CreateAccount />} />
 
         {/* App Pages */}

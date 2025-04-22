@@ -149,3 +149,12 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'  # To send real emails
+EMAIL_HOST = 'smtp.gmail.com'  # Gmail's SMTP server
+EMAIL_PORT = 587  # Use 587 for TLS or 465 for SSL
+EMAIL_USE_TLS = True  # Secure connection
+EMAIL_HOST_USER = 'pavimohan0105@gmail.com'  # Your Gmail address
+EMAIL_HOST_PASSWORD = 'qcxd wguc uqcs taer'  # Your Gmail password or App Password (if 2FA enabled)
