@@ -2,64 +2,50 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Briefcase, Star, User } from "lucide-react";
 
-const UserProfile = () => {
+const Userprofile = () => {
   const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true); // Loading state
-  const [error, setError] = useState(null); // Error state
 
   useEffect(() => {
-    const token = localStorage.getItem("access");
-
-    if (!token) {
-      window.location.href = "/login"; // Redirect to login if no token found
-      return;
-    }
-
-    // Fetch profile data
-    const fetchProfile = async () => {
-      try {
-        const response = await axios.get("http://localhost:8000/api/get_profile/", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        setProfile(response.data); // Set profile data
-        setLoading(false); // Stop loading
-      } catch (err) {
-        setLoading(false); // Stop loading
-        if (err.response?.status === 401) {
-          setError("Session expired. Please log in again.");
-        } else {
-          setError("An error occurred while fetching the profile.");
-        }
-      }
-    };
-
-    fetchProfile();
+    const token = localStorage.getItem("access_token");
+    axios
+      .get("http://localhost:8000/api/get_profile/", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((res) => {
+        setProfile(res.data);
+      })
+      .catch((err) => {
+        console.error("Error fetching profile:", err);
+      });
   }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem("access");
-    localStorage.removeItem("refresh");
-    window.location.href = "/login"; // Redirect to login
+  const handleLogout = async () => {
+    const refresh = localStorage.getItem("refresh_token");
+    const access = localStorage.getItem("access_token");
+
+    try {
+      await axios.post(
+        "http://localhost:8000/api/logout/",
+        { refresh },
+        {
+          headers: {
+            Authorization: `Bearer ${access}`,
+          },
+        }
+      );
+    } catch (err) {
+      console.error("Logout API error:", err.response?.data || err.message);
+    }
+
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+    window.location.href = "/login";
   };
 
-  if (loading) {
+  if (!profile) {
     return <div className="text-center mt-10 text-lg text-gray-600">Loading profile...</div>;
-  }
-
-  if (error) {
-    return (
-      <div className="text-center mt-10 text-lg text-gray-600">
-        {error}
-        <button
-          onClick={handleLogout}
-          className="mt-4 bg-red-500 text-white px-4 py-2 rounded-lg"
-        >
-          Logout
-        </button>
-      </div>
-    );
   }
 
   return (
@@ -122,4 +108,4 @@ const UserProfile = () => {
   );
 };
 
-export default UserProfile;
+export default Userprofile;
