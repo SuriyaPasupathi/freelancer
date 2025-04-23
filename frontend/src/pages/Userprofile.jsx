@@ -6,7 +6,7 @@ const Userprofile = () => {
   const [profile, setProfile] = useState(null);
 
   useEffect(() => {
-    const token = localStorage.getItem("access");
+    const token = localStorage.getItem("access_token");
     axios
       .get("http://localhost:8000/api/get_profile/", {
         headers: {
@@ -22,8 +22,8 @@ const Userprofile = () => {
   }, []);
 
   const handleLogout = async () => {
-    const refresh = localStorage.getItem("refresh");
-    const access = localStorage.getItem("access");
+    const refresh = localStorage.getItem("refresh_token");
+    const access = localStorage.getItem("access_token");
 
     try {
       await axios.post(
@@ -39,8 +39,8 @@ const Userprofile = () => {
       console.error("Logout API error:", err.response?.data || err.message);
     }
 
-    localStorage.removeItem("access");
-    localStorage.removeItem("refresh");
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
     window.location.href = "/login";
   };
 
