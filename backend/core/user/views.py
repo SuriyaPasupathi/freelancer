@@ -161,9 +161,12 @@ class CheckProfileStatusView(APIView):
 @permission_classes([IsAuthenticated])
 def get_profile(request):
     try:
+        print(f"Request User: {request.user}")  # Debug print to see if user is authenticated
         profile = UserProfile.objects.get(user=request.user)
     except UserProfile.DoesNotExist:
         return Response({'detail': 'Profile does not exist.'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'detail': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     serializer = UserProfileSerializer(profile)
     return Response(serializer.data, status=status.HTTP_200_OK)
@@ -214,8 +217,6 @@ class PasswordResetConfirmView(APIView):
                 return Response({"error": "Invalid token."}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-
 
 
 class LogoutView(APIView):
