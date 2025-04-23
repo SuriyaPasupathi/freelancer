@@ -1,7 +1,8 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
-from .models import UserProfile, SocialLink, Review
+from .models import UserProfile, SocialLink, Review, ProfileShare
+
 
 User = get_user_model()
 
@@ -82,7 +83,20 @@ class SocialLinkSerializer(serializers.ModelSerializer):
 class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review
-        fields = ('id', 'reviewer_name', 'rating', 'comment', 'created_at')
+        fields = ['id', 'profile', 'reviewer_name', 'rating', 'comment', 'created_at']
+        read_only_fields = ['id', 'created_at']
+
+    def validate_rating(self, value):
+        if not (1 <= value <= 5):
+            raise serializers.ValidationError("Rating must be between 1 and 5")
+        return value
+
+    def validate(self, data):
+        if not data.get('reviewer_name'):
+            raise serializers.ValidationError({"reviewer_name": "Reviewer name is required"})
+        if not data.get('comment'):
+            raise serializers.ValidationError({"comment": "Comment is required"})
+        return data
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
@@ -167,3 +181,28 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
     uid = serializers.CharField()
     token = serializers.CharField()
     new_password = serializers.CharField(min_length=8, write_only=True)
+
+
+class ProfileShareSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProfileShare
+        fields = ['share_token', 'recipient_email', 'expires_at']
+        read_only_fields = ['share_token', 'expires_at']
+
+
+class PublicProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserProfile
+        fields = [
+            'id',
+            'name',
+            'profile_pic',
+            'job_title',
+            'job_specialization',
+            'rating',
+            'subscription_type',
+            # Add other fields you want to make public
+        ]
+
+
+

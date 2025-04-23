@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Briefcase, Star, User } from "lucide-react";
+import { useNavigate } from 'react-router-dom';
 
 const Userprofile = () => {
   const [profile, setProfile] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const token = localStorage.getItem("access_token");
@@ -42,6 +44,10 @@ const Userprofile = () => {
     localStorage.removeItem("access_token");
     localStorage.removeItem("refresh_token");
     window.location.href = "/login";
+  };
+
+  const handleShareProfile = () => {
+    navigate('/share-profile');
   };
 
   if (!profile) {
@@ -133,6 +139,14 @@ const Userprofile = () => {
           )}
         </div>
       </div>
+
+      {/* Add Share Profile button */}
+      <button
+        onClick={handleShareProfile}
+        className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+      >
+        Share Profile
+      </button>
     </div>
   );
 };

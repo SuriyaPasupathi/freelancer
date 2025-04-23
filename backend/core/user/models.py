@@ -2,6 +2,9 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.utils import timezone
+import uuid
+
 
 class CustomUser(AbstractUser):
     email = models.EmailField(unique=True)
@@ -61,6 +64,14 @@ class UserProfile(models.Model):
             self.profile_url = str(uuid.uuid4())[:8]
         super().save(*args, **kwargs)
 
+    def generate_share_link(self, recipient_email, expires_in_days=7):
+        share = ProfileShare.objects.create(
+            profile=self,
+            recipient_email=recipient_email,
+            expires_at=timezone.now() + timezone.timedelta(days=expires_in_days)
+        )
+        return share.share_token
+
 
 class SocialLink(models.Model):
     """Separate model for social media links to keep the data structure clean"""
@@ -103,3 +114,30 @@ class Review(models.Model):
         if reviews:
             profile.rating = sum(review.rating for review in reviews) / reviews.count()
             profile.save(update_fields=['rating'])
+
+    def generate_share_link(self, recipient_email, expires_in_days=7):
+        share = ProfileShare.objects.create(
+            profile=self,
+            recipient_email=recipient_email,
+            expires_at=timezone.now() + timezone.timedelta(days=expires_in_days)
+        )
+        return share.share_token
+
+
+class ProfileShare(models.Model):
+    profile = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='shares')
+    share_token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    recipient_email = models.EmailField()
+    is_verified = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    
+    def is_valid(self):
+        return timezone.now() <= self.expires_at
+    
+    def __str__(self):
+        return f"Share for {self.profile.name} - {self.recipient_email}"
+    
+    class Meta:
+        ordering = ['-created_at']
+
