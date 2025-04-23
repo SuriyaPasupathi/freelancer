@@ -130,7 +130,7 @@ const VerifyShare = () => {
             profile.subscription_type === 'STANDARD' ? 'bg-green-100 text-green-800' :
             profile.subscription_type === 'BASIC' ? 'bg-blue-100 text-blue-800' : 
             'bg-gray-100 text-gray-800'}`}>
-          {profile.subscription_type || 'FREE'} Profile
+          {profile.subscription_type || 'free'} Profile
         </div>
       </div>
     );
