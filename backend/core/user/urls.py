@@ -1,9 +1,23 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import RegisterView, CustomLoginView, UserProfileViewSet, ReviewViewSet, createaccount, CheckProfileStatusView,get_profile,RequestResetPasswordView,PasswordResetConfirmView,LogoutView
+from .views import (
+    RegisterView, 
+    CustomLoginView, 
+    UserProfileViewSet, 
+    ReviewViewSet, 
+    createaccount, 
+    CheckProfileStatusView,
+    get_profile,
+    RequestResetPasswordView,
+    PasswordResetConfirmView,
+    LogoutView,
+    generate_profile_share,
+    verify_profile_share,
+    submit_review,
+    test_email,
+)
 
 router = DefaultRouter()
-# router.register(r'profiles', UserProfileViewSet, basename='profiles')
 router.register(r'reviews', ReviewViewSet)
 
 urlpatterns = [
@@ -15,6 +29,10 @@ urlpatterns = [
     path('request-reset-password/', RequestResetPasswordView.as_view(), name='request-reset-password'),
     path('reset-password-confirm/', PasswordResetConfirmView.as_view(), name='password-reset-confirm'),
     path('logout/', LogoutView.as_view(), name='logout'),
-    path('api/', include(router.urls))  # ✅ Stick to this pattern
+    path('api/', include(router.urls)),  # ✅ Stick to this pattern
+    path('share-profile/', generate_profile_share, name='share-profile'),
+    path('verify-share/<uuid:token>/', verify_profile_share, name='verify-share'),
+    path('submit-review/<uuid:token>/', submit_review, name='submit-review'),
+    path('test-email/', test_email, name='test-email'),
 ]
 

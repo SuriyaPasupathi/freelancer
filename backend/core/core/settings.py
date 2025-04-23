@@ -162,11 +162,40 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'  # To send real emails
-EMAIL_HOST = 'smtp.gmail.com'  # Gmail's SMTP server
-EMAIL_PORT = 587  # Use 587 for TLS or 465 for SSL
-EMAIL_USE_TLS = True  # Secure connection
-EMAIL_HOST_USER = 'pavimohan0105@gmail.com'  # Your Gmail address
-EMAIL_HOST_PASSWORD = 'qcxd wguc uqcs taer'  # Your Gmail password or App Password (if 2FA enabled)
+# Email settings for Gmail
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'venkatesanvenu1769@gmail.com'
+EMAIL_HOST_PASSWORD = 'zcpt wxgk uphu abeb'  # your app password
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+EMAIL_TIMEOUT = 30  # timeout in seconds
 
+FRONTEND_URL = 'http://localhost:5173'  # Your React frontend URL
 
+# Logging configuration
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+        'file': {
+            'class': 'logging.FileHandler',
+            'filename': 'debug.log',
+        },
+    },
+    'loggers': {
+        '': {  # Root logger
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+        },
+        'user': {  # App-specific logger
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+    },
+}

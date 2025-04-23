@@ -16,6 +16,12 @@ from django.core.mail import send_mail
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.encoding import force_bytes, force_str
+from .serializers import RegisterSerializer, UserProfileSerializer, RequestPasswordResetSerializer, PasswordResetConfirmSerializer,ReviewSerializer, ProfileShareSerializer, PublicProfileSerializer
+from .models import UserProfile,Review, ProfileShare  # Assuming CustomUser is the model for your custom user
+from django.conf import settings
+from django.utils import timezone
+import uuid
+
 
 User = get_user_model()
 
@@ -183,16 +189,69 @@ class RequestResetPasswordView(APIView):
             uid = urlsafe_base64_encode(force_bytes(user.pk))
             token = default_token_generator.make_token(user)
 
-            reset_link = f"http://localhost:5173/ResetPassword?uid={uid}&token={token}"
+            reset_link = f"{settings.FRONTEND_URL}/ResetPassword?uid={uid}&token={token}"
 
-            send_mail(
-                "Reset Your Password",
-                f"Click the link to reset your password: {reset_link}",
-                "no-reply@yourapp.com",
-                [email],
-            )
+            # HTML email content
+            html_message = f"""
+            <html>
+                <body>
+                    <h2>Password Reset Request</h2>
+                    <p>Hello,</p>
+                    <p>You've requested to reset your password. Click the link below to reset it:</p>
+                    <p><a href="{reset_link}">Reset Your Password</a></p>
+                    <p>Or copy and paste this link in your browser:</p>
+                    <p>{reset_link}</p>
+                    <p>If you didn't request this, please ignore this email.</p>
+                    <p>This link will expire soon for security reasons.</p>
+                    <br>
+                    <p>Best regards,<br>The Team</p>
+                </body>
+            </html>
+            """
 
-            return Response({"message": "Password reset link sent to your email."})
+            # Plain text version
+            text_message = f"""
+            Password Reset Request
+
+            Hello,
+
+            You've requested to reset your password. Please visit this link to reset it:
+            {reset_link}
+
+            If you didn't request this, please ignore this email.
+            This link will expire soon for security reasons.
+
+            Best regards,
+            The Team
+            """
+
+            try:
+                from django.core.mail import EmailMultiAlternatives
+                
+                subject = "Reset Your Password"
+                email_message = EmailMultiAlternatives(
+                    subject=subject,
+                    body=text_message,
+                    from_email=settings.EMAIL_HOST_USER,
+                    to=[email],
+                )
+                email_message.attach_alternative(html_message, "text/html")
+                email_message.send(fail_silently=False)
+
+                return Response({
+                    "message": "Password reset link sent to your email.",
+                    "success": True
+                })
+
+            except Exception as e:
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error(f"Password reset email failed: {str(e)}")
+                return Response({
+                    "error": "Failed to send password reset email. Please try again later.",
+                    "details": str(e)
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
         except User.DoesNotExist:
             return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
 
@@ -230,3 +289,189 @@ class LogoutView(APIView):
             return Response({"detail": "Logout successful."}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def generate_profile_share(request):
+    recipient_email = request.data.get('email')
+    if not recipient_email:
+        return Response(
+            {'error': 'Email is required'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    try:
+        profile = request.user.profile
+        
+        # Create share with 7 days expiration
+        share = ProfileShare.objects.create(
+            profile=profile,
+            recipient_email=recipient_email,
+            expires_at=timezone.now() + timezone.timedelta(days=7)
+        )
+        
+        verification_url = f"{settings.FRONTEND_URL}/verify-profile/{share.share_token}"
+        
+        # HTML email content
+        html_message = f"""
+        <html>
+            <body>
+                <h2>Profile Review Request</h2>
+                <p>Hello,</p>
+                <p>You've been invited to review {profile.name}'s professional profile.</p>
+                <p><a href="{verification_url}">Click here to view and leave a review</a></p>
+                <p>Or copy and paste this link in your browser:</p>
+                <p>{verification_url}</p>
+                <p>Note: This link will expire in 7 days.</p>
+                <br>
+                <p>Best regards,<br>The Team</p>
+            </body>
+        </html>
+        """
+        
+        # Plain text email content
+        text_message = f"""
+        Profile Review Request
+
+        Hello,
+
+        You've been invited to review {profile.name}'s professional profile.
+
+        Please visit this link to view and leave a review:
+        {verification_url}
+
+        Note: This link will expire in 7 days.
+
+        Best regards,
+        The Team
+        """
+        
+        try:
+            from django.core.mail import EmailMultiAlternatives
+            from django.utils.html import strip_tags
+            
+            subject = f"Profile Review Request from {profile.name}"
+            email = EmailMultiAlternatives(
+                subject=subject,
+                body=text_message,
+                from_email=settings.EMAIL_HOST_USER,
+                to=[recipient_email],
+            )
+            email.attach_alternative(html_message, "text/html")
+            email.send(fail_silently=False)
+            
+            return Response({
+                'message': 'Share link sent successfully',
+                'share_token': str(share.share_token),
+                'verification_url': verification_url
+            })
+            
+        except Exception as e:
+            # Log the error for debugging
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Email sending failed: {str(e)}")
+            
+            # Still return success since the share link was created
+            return Response({
+                'message': 'Share link created but email sending failed. Please share the link manually.',
+                'share_token': str(share.share_token),
+                'verification_url': verification_url
+            }, status=status.HTTP_201_CREATED)
+            
+    except UserProfile.DoesNotExist:
+        return Response(
+            {'error': 'Profile not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+@api_view(['GET'])
+def verify_profile_share(request, token):
+    try:
+        # Convert string token to UUID if needed
+        if isinstance(token, str):
+            token = uuid.UUID(token)
+            
+        share = ProfileShare.objects.select_related('profile').get(share_token=token)
+        
+        # Check if share is expired
+        if timezone.now() > share.expires_at:
+            return Response(
+                {'error': 'This link has expired'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Serialize the profile data
+        serializer = PublicProfileSerializer(share.profile)
+        return Response({
+            'profile': serializer.data,
+            'share_token': str(share.share_token)
+        })
+        
+    except (ProfileShare.DoesNotExist, ValueError, TypeError):
+        return Response(
+            {'error': 'Invalid share token'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+@api_view(['POST'])
+def submit_review(request, token):
+    try:
+        # Get the share object and validate it
+        share = ProfileShare.objects.get(share_token=token)
+        if not share.is_valid():
+            return Response({'error': 'Link expired or invalid'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Create review data using the profile from the share object
+        review_data = {
+            'profile': share.profile.id,  # Get profile ID from the share object
+            'reviewer_name': request.data.get('reviewer_name'),
+            'rating': request.data.get('rating'),
+            'comment': request.data.get('comment')
+        }
+        
+        # Validate that required fields are present
+        if not all([review_data['reviewer_name'], review_data['rating'], review_data['comment']]):
+            return Response({
+                'error': 'reviewer_name, rating, and comment are required fields'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        serializer = ReviewSerializer(data=review_data)
+        if serializer.is_valid():
+            review = serializer.save()
+            return Response({
+                'message': 'Review submitted successfully',
+                'review': ReviewSerializer(review).data
+            }, status=status.HTTP_201_CREATED)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+    except ProfileShare.DoesNotExist:
+        return Response({
+            'error': 'Invalid share token'
+        }, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error submitting review: {str(e)}")
+        return Response({
+            'error': 'An error occurred while submitting the review'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['POST'])
+def test_email(request):
+    try:
+        from django.core.mail import send_mail
+        
+        send_mail(
+            subject='Test Email',
+            message='This is a test email.',
+            from_email=settings.EMAIL_HOST_USER,
+            recipient_list=[request.data.get('email', '')],
+            fail_silently=False,
+        )
+        return Response({'message': 'Test email sent successfully'})
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
