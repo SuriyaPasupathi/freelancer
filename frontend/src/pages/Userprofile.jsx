@@ -102,6 +102,35 @@ const Userprofile = () => {
               <span>{profile.job_specialization || "Not specified"}</span>
             </div>
           </div>
+
+          {/* Additional Premium/Standard Fields */}
+          {(profile.email || profile.services) && (
+            <div>
+              <h3 className="text-xl font-semibold text-gray-700 mb-3 border-b pb-2">Additional Information</h3>
+              <p><strong>Email:</strong> {profile.email || "Not provided"}</p>
+              <p><strong>Mobile:</strong> {profile.mobile || "Not provided"}</p>
+              <p><strong>Services:</strong> {profile.services || "Not provided"}</p>
+              <p><strong>Experiences:</strong> {profile.experiences || "Not provided"}</p>
+              <p><strong>Skills:</strong> {profile.skills || "Not provided"}</p>
+              <p><strong>Tools:</strong> {profile.tools || "Not provided"}</p>
+            </div>
+          )}
+
+          {/* Premium Section */}
+          {(profile.education || profile.certifications || profile.portfolio) && (
+            <div>
+              <h3 className="text-xl font-semibold text-gray-700 mb-3 border-b pb-2">Education & Credentials</h3>
+              <p><strong>Education:</strong> {profile.education || "Not provided"}</p>
+              <p><strong>Certifications:</strong> {profile.certifications || "Not provided"}</p>
+              <p><strong>Portfolio:</strong> {profile.portfolio || "Not provided"}</p>
+              {profile.video_intro && (
+                <div className="mt-3">
+                  <strong>Video Intro:</strong>
+                  <video src={`http://localhost:8000${profile.video_intro}`} controls className="w-full mt-2 rounded" />
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>
