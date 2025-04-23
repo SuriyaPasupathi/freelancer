@@ -201,7 +201,16 @@ class PublicProfileSerializer(serializers.ModelSerializer):
             'job_specialization',
             'rating',
             'subscription_type',
-            # Add other fields you want to make public
+            'email',
+            'mobile',
+            'services',
+            'experiences',
+            'skills',
+            'tools',
+            'education',
+            'certifications',
+            'portfolio',
+            'video_intro'
         ]
 
 
