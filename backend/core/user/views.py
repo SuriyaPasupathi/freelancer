@@ -11,12 +11,12 @@ from django.contrib.auth import get_user_model
 from .serializers import RegisterSerializer, UserProfileSerializer, RequestPasswordResetSerializer, PasswordResetConfirmSerializer,ReviewSerializer
 from .models import UserProfile,Review  # Assuming CustomUser is the model for your custom user
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes,parser_classes
 from django.core.mail import send_mail
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.encoding import force_bytes, force_str
-
+from rest_framework.parsers import MultiPartParser, FormParser
 User = get_user_model()
 
 # ✅ Register View
@@ -230,3 +230,16 @@ class LogoutView(APIView):
             return Response({"detail": "Logout successful."}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+class UpdateProfileView(APIView):
+    parser_classes = (MultiPartParser, FormParser)
+
+    def put(self, request, *args, **kwargs):
+        user = request.user  # Get the logged-in user
+        profile = UserProfile.objects.get(user=user)
+        
+        serializer = UserProfileSerializer(profile, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=400)
