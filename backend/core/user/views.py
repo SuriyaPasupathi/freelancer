@@ -66,11 +66,7 @@ def createaccount(request):
     if request.FILES.get('profile_pic'):
         profile.profile_pic = request.FILES['profile_pic']
 
-    if subscription_type == 'free':
-        # Only basic fields are saved
-        pass
-
-    elif subscription_type == 'standard':
+    if subscription_type == 'standard' or subscription_type == 'premium':
         profile.email = data.get('email', '')
         profile.mobile = data.get('mobile', '')
         profile.services = data.get('services', '')
@@ -78,22 +74,12 @@ def createaccount(request):
         profile.skills = data.get('skills', '')
         profile.tools = data.get('tools', '')
 
-    elif subscription_type == 'premium':
-        # Standard + Premium fields
-        profile.email = data.get('email', '')
-        profile.mobile = data.get('mobile', '')
-        profile.services = data.get('services', '')
-        profile.experiences = data.get('experiences', '')
-        profile.skills = data.get('skills', '')
-        profile.tools = data.get('tools', '')
+    if subscription_type == 'premium':
         profile.education = data.get('education', '')
         profile.certifications = data.get('certifications', '')
         profile.portfolio = data.get('portfolio', '')
         if request.FILES.get('video_intro'):
             profile.video_intro = request.FILES['video_intro']
-
-    else:
-        return Response({'error': 'Invalid subscription type.'}, status=400)
 
     profile.save()
     serializer = UserProfileSerializer(profile)

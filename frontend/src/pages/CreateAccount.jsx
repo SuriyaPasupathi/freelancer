@@ -1,17 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const CreateAccount = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+
   const [subscriptionType, setSubscriptionType] = useState('free');
-
-  useEffect(() => {
-    if (location.state?.subscription_type) {
-      setSubscriptionType(location.state.subscription_type);
-    }
-  }, [location]);
-
   const [formData, setFormData] = useState({
     name: '',
     job_title: '',
@@ -29,16 +24,30 @@ const CreateAccount = () => {
     video_intro: null
   });
 
+  useEffect(() => {
+    if (location.state?.subscription_type) {
+      setSubscriptionType(location.state.subscription_type);
+    }
+  }, [location]);
+
   const handleChange = (e) => {
     const { name, value, files } = e.target;
-    setFormData({
-      ...formData,
+    setFormData((prev) => ({
+      ...prev,
       [name]: files ? files[0] : value
-    });
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const accessToken = localStorage.getItem('access_token'); // Using access_token
+
+    if (!accessToken) {
+      alert('Please log in first.');
+      navigate('/login');
+      return;
+    }
 
     const form = new FormData();
     form.append('subscription_type', subscriptionType);
@@ -64,22 +73,31 @@ const CreateAccount = () => {
     }
 
     try {
-      const response = await axios.post(
-        'http://127.0.0.1:8000/api/createaccount/',
-        form,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            Authorization: `Bearer ${localStorage.getItem('access_token')}`,
-          },
+      const response = await axios.post('http://127.0.0.1:8000/api/createaccount/', form, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${accessToken}`
         }
-      );
+      });
 
       console.log('Account Created:', response.data);
       alert('Profile created successfully!');
+      navigate('/Userprofile');
     } catch (error) {
-      console.error('Error creating profile:', error.response?.data || error.message);
-      alert('Failed to create profile.');
+      console.error('Error:', error.response?.data || error.message);
+      if (
+        error.response &&
+        error.response.data &&
+        error.response.data.code === 'token_not_valid'
+      ) {
+        alert('Session expired. Please log in again.');
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        localStorage.removeItem('user');
+        navigate('/login');
+      } else {
+        alert('Failed to create profile. Check console for details.');
+      }
     }
   };
 
@@ -90,14 +108,10 @@ const CreateAccount = () => {
       </h2>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {(subscriptionType === 'free' || subscriptionType === 'standard' || subscriptionType === 'premium') && (
-          <>
-            <Input label="Name" name="name" value={formData.name} onChange={handleChange} />
-            <Input label="Job Title" name="job_title" value={formData.job_title} onChange={handleChange} />
-            <Input label="Job Specialization" name="job_specialization" value={formData.job_specialization} onChange={handleChange} />
-            <FileInput label="Profile Picture" name="profile_pic" onChange={handleChange} />
-          </>
-        )}
+        <Input label="Name" name="name" value={formData.name} onChange={handleChange} />
+        <Input label="Job Title" name="job_title" value={formData.job_title} onChange={handleChange} />
+        <Input label="Job Specialization" name="job_specialization" value={formData.job_specialization} onChange={handleChange} />
+        <FileInput label="Profile Picture" name="profile_pic" onChange={handleChange} />
 
         {(subscriptionType === 'standard' || subscriptionType === 'premium') && (
           <>
@@ -139,6 +153,7 @@ const Input = ({ label, name, value, onChange }) => (
       value={value}
       onChange={onChange}
       className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-300"
+      required
     />
   </div>
 );

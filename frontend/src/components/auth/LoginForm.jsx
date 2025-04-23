@@ -21,8 +21,9 @@ const LoginForm = () => {
 
       const { access, refresh, user } = response.data;
 
-      localStorage.setItem('access', access);
-      localStorage.setItem('refresh', refresh);
+      // Store tokens in localStorage
+      localStorage.setItem('access_token', access);
+      localStorage.setItem('refresh_token', refresh);
       localStorage.setItem('user', JSON.stringify(user));
 
       const profileRes = await axios.get("http://localhost:8000/api/profile_status/", {
