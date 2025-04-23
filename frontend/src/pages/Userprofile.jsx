@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { Briefcase, Star, User } from "lucide-react";
 
-const Userprofile = () => {
+const UserProfile = () => {
   const [profile, setProfile] = useState(null);
+  const [formData, setFormData] = useState({});
+  const [editing, setEditing] = useState(false);
+
+  const token = localStorage.getItem("access_token");
 
   useEffect(() => {
-    const token = localStorage.getItem("access_token");
     axios
       .get("http://localhost:8000/api/get_profile/", {
         headers: {
@@ -15,33 +17,45 @@ const Userprofile = () => {
       })
       .then((res) => {
         setProfile(res.data);
+        setFormData(res.data); // Prefill form
       })
-      .catch((err) => {
-        console.error("Error fetching profile:", err);
-      });
+      .catch((err) => console.error("Error fetching profile:", err));
   }, []);
 
-  const handleLogout = async () => {
-    const refresh = localStorage.getItem("refresh_token");
-    const access = localStorage.getItem("access_token");
+  const handleChange = (e) => {
+    const { name, value, files } = e.target;
+    setFormData({
+      ...formData,
+      [name]: files ? files[0] : value,
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const form = new FormData();
+
+    for (const key in formData) {
+      if (formData[key]) {
+        form.append(key, formData[key]);
+      }
+    }
 
     try {
-      await axios.post(
-        "http://localhost:8000/api/logout/",
-        { refresh },
+      const res = await axios.put(
+        "http://localhost:8000/api/update_profile/",
+        form,
         {
           headers: {
-            Authorization: `Bearer ${access}`,
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
           },
         }
       );
+      setProfile(res.data);
+      setEditing(false);
     } catch (err) {
-      console.error("Logout API error:", err.response?.data || err.message);
+      console.error("Error updating profile:", err.response?.data || err.message);
     }
-
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("refresh_token");
-    window.location.href = "/login";
   };
 
   if (!profile) {
@@ -49,92 +63,108 @@ const Userprofile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
-      {/* 👤 Name above logout */}
-      <div className="flex justify-end max-w-5xl mx-auto mb-6">
-        <div className="flex flex-col items-end space-y-2">
-          <div className="flex items-center text-gray-700 space-x-2">
-            <User className="w-5 h-5 text-gray-600" />
-            <span className="font-medium">{profile.name}</span>
-          </div>
+    <div className="min-h-screen bg-gray-100 p-6">
+      <div className="max-w-4xl mx-auto bg-white shadow-md rounded-xl p-6">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold text-gray-800">Edit Profile</h2>
           <button
-            onClick={handleLogout}
-            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg shadow"
+            onClick={() => setEditing(!editing)}
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
           >
-            Logout
+            {editing ? "Cancel" : "Edit"}
           </button>
         </div>
-      </div>
 
-      {/* Profile Card */}
-      <div className="bg-white rounded-xl shadow-lg p-10 max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
-        {/* Left Side */}
-        <div className="flex flex-col items-center md:items-start md:col-span-1">
-          <div className="w-36 h-36 rounded-full overflow-hidden border-4 border-green-500 mb-4 shadow-md">
-            <img
-              src={
-                profile.profile_pic
-                  ? `http://localhost:8000${profile.profile_pic}`
-                  : "https://i.pravatar.cc/150"
-              }
-              alt="Profile"
-              className="w-full h-full object-cover"
-            />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-800">{profile.name}</h2>
-          <p className="text-gray-600">{profile.job_title || "No title provided"}</p>
-        </div>
+        {editing ? (
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {[
+              ["name", "Name"],
+              ["job_title", "Job Title"],
+              ["job_specialization", "Specialization"],
+              ["email", "Email"],
+              ["mobile", "Mobile"],
+              ["services", "Services"],
+              ["experiences", "Experiences"],
+              ["skills", "Skills"],
+              ["tools", "Tools"],
+              ["education", "Education"],
+              ["certifications", "Certifications"],
+              ["portfolio", "Portfolio (URL)"],
+            ].map(([key, label]) => (
+              <div key={key}>
+                <label className="block font-semibold mb-1 text-gray-700">{label}</label>
+                <input
+                  type="text"
+                  name={key}
+                  value={formData[key] || ""}
+                  onChange={handleChange}
+                  className="w-full border border-gray-300 rounded px-3 py-2"
+                />
+              </div>
+            ))}
 
-        {/* Right Side */}
-        <div className="md:col-span-2 space-y-6">
-          <div>
-            <h3 className="text-xl font-semibold text-gray-700 mb-3 border-b pb-2">Professional Details</h3>
-
-            <div className="flex items-center gap-3 mb-2 text-gray-700">
-              <Briefcase className="w-5 h-5 text-green-600" />
-              <span className="font-medium">Job Title:</span>
-              <span>{profile.job_title || "Not specified"}</span>
-            </div>
-
-            <div className="flex items-center gap-3 text-gray-700">
-              <Star className="w-5 h-5 text-yellow-500" />
-              <span className="font-medium">Specialization:</span>
-              <span>{profile.job_specialization || "Not specified"}</span>
-            </div>
-          </div>
-
-          {/* Additional Premium/Standard Fields */}
-          {(profile.email || profile.services) && (
             <div>
-              <h3 className="text-xl font-semibold text-gray-700 mb-3 border-b pb-2">Additional Information</h3>
-              <p><strong>Email:</strong> {profile.email || "Not provided"}</p>
-              <p><strong>Mobile:</strong> {profile.mobile || "Not provided"}</p>
-              <p><strong>Services:</strong> {profile.services || "Not provided"}</p>
-              <p><strong>Experiences:</strong> {profile.experiences || "Not provided"}</p>
-              <p><strong>Skills:</strong> {profile.skills || "Not provided"}</p>
-              <p><strong>Tools:</strong> {profile.tools || "Not provided"}</p>
+              <label className="block font-semibold mb-1 text-gray-700">Profile Picture</label>
+              <input
+                type="file"
+                name="profile_pic"
+                accept="image/*"
+                onChange={handleChange}
+                className="block"
+              />
             </div>
-          )}
 
-          {/* Premium Section */}
-          {(profile.education || profile.certifications || profile.portfolio) && (
             <div>
-              <h3 className="text-xl font-semibold text-gray-700 mb-3 border-b pb-2">Education & Credentials</h3>
-              <p><strong>Education:</strong> {profile.education || "Not provided"}</p>
-              <p><strong>Certifications:</strong> {profile.certifications || "Not provided"}</p>
-              <p><strong>Portfolio:</strong> {profile.portfolio || "Not provided"}</p>
-              {profile.video_intro && (
-                <div className="mt-3">
-                  <strong>Video Intro:</strong>
-                  <video src={`http://localhost:8000${profile.video_intro}`} controls className="w-full mt-2 rounded" />
-                </div>
-              )}
+              <label className="block font-semibold mb-1 text-gray-700">Video Intro</label>
+              <input
+                type="file"
+                name="video_intro"
+                accept="video/*"
+                onChange={handleChange}
+                className="block"
+              />
             </div>
-          )}
-        </div>
+
+            <button
+              type="submit"
+              className="mt-4 bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700"
+            >
+              Save Changes
+            </button>
+          </form>
+        ) : (
+          <div className="space-y-3 text-gray-700">
+            <p><strong>Name:</strong> {profile.name}</p>
+            <p><strong>Job Title:</strong> {profile.job_title}</p>
+            <p><strong>Specialization:</strong> {profile.job_specialization}</p>
+            <p><strong>Email:</strong> {profile.email}</p>
+            <p><strong>Mobile:</strong> {profile.mobile}</p>
+            <p><strong>Services:</strong> {profile.services}</p>
+            <p><strong>Experiences:</strong> {profile.experiences}</p>
+            <p><strong>Skills:</strong> {profile.skills}</p>
+            <p><strong>Tools:</strong> {profile.tools}</p>
+            <p><strong>Education:</strong> {profile.education}</p>
+            <p><strong>Certifications:</strong> {profile.certifications}</p>
+            <p><strong>Portfolio:</strong> {profile.portfolio}</p>
+            {profile.profile_pic && (
+              <img
+                src={`http://localhost:8000${profile.profile_pic}`}
+                alt="Profile"
+                className="w-32 h-32 object-cover rounded-full mt-3 border"
+              />
+            )}
+            {profile.video_intro && (
+              <video
+                src={`http://localhost:8000${profile.video_intro}`}
+                controls
+                className="w-full rounded mt-3"
+              />
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
-export default Userprofile;
+export default UserProfile;
