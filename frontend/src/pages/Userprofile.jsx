@@ -180,7 +180,7 @@ const UserProfile = () => {
     <div className="min-h-screen bg-gray-100 p-8">
       {/* Header with name and logout */}
       <div className="flex justify-between items-center max-w-5xl mx-auto mb-6">
-        <h1 className="text-3xl font-bold text-blue-700">Profile Dashboard</h1>
+        <h1 className="text-3xl font-bold text-blue-700">Profile </h1>
         <div className="flex flex-col items-end space-y-2">
           <div className="flex items-center text-gray-700 space-x-2">
             <User className="w-5 h-5 text-gray-600" />
