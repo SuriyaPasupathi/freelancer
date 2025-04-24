@@ -22,6 +22,7 @@ from django.conf import settings
 from django.utils import timezone
 import uuid
 from rest_framework.parsers import MultiPartParser, FormParser
+from django.core.mail import EmailMultiAlternatives
 
 
 
@@ -94,41 +95,41 @@ def createaccount(request):
     return Response(serializer.data)
 
 
-class UserProfileViewSet(viewsets.ModelViewSet):
-    queryset = UserProfile.objects.all()
-    serializer_class = UserProfileSerializer
-    permission_classes = [permissions.IsAuthenticated]
+# class UserProfileViewSet(viewsets.ModelViewSet):
+#     queryset = UserProfile.objects.all()
+#     serializer_class = UserProfileSerializer
+#     permission_classes = [permissions.IsAuthenticated]
     
-    def get_queryset(self):
-        queryset = super().get_queryset()
+#     def get_queryset(self):
+#         queryset = super().get_queryset()
 
-        if not self.request.user.is_staff:
-            queryset = queryset.filter(user=self.request.user)
+#         if not self.request.user.is_staff:
+#             queryset = queryset.filter(user=self.request.user)
 
-        subscription = self.request.query_params.get('subscription')
-        if subscription:
-            queryset = queryset.filter(subscription_type=subscription)
+#         subscription = self.request.query_params.get('subscription')
+#         if subscription:
+#             queryset = queryset.filter(subscription_type=subscription)
 
-        return queryset
+#         return queryset
 
     
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+#     def perform_create(self, serializer):
+#         serializer.save(user=self.request.user)
     
-    @action(detail=True, methods=['post'])
-    def upgrade_subscription(self, request, pk=None):
-        profile = self.get_object()
-        subscription_type = request.data.get('subscription_type')
+    # @action(detail=True, methods=['post'])
+    # def upgrade_subscription(self, request, pk=None):
+    #     profile = self.get_object()
+    #     subscription_type = request.data.get('subscription_type')
         
-        if subscription_type not in [choice[0] for choice in UserProfile.SUBSCRIPTION_CHOICES]:
-            return Response(
-                {'error': 'Invalid subscription type'}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
+    #     if subscription_type not in [choice[0] for choice in UserProfile.SUBSCRIPTION_CHOICES]:
+    #         return Response(
+    #             {'error': 'Invalid subscription type'}, 
+    #             status=status.HTTP_400_BAD_REQUEST
+    #         )
         
-        profile.subscription_type = subscription_type
-        profile.save()
-        return Response({'status': 'subscription updated'})
+    #     profile.subscription_type = subscription_type
+    #     profile.save()
+    #     return Response({'status': 'subscription updated'})
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
@@ -350,8 +351,7 @@ def generate_profile_share(request):
         """
         
         try:
-            from django.core.mail import EmailMultiAlternatives
-            from django.utils.html import strip_tags
+     
             
             subject = f"Profile Review Request from {profile.name}"
             email = EmailMultiAlternatives(
