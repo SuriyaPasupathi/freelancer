@@ -1,17 +1,11 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import (
-    RegisterView, CustomLoginView, ReviewViewSet,
-    createaccount, CheckProfileStatusView, get_profile,
-    RequestResetPasswordView, PasswordResetConfirmView,
-    LogoutView, UpdateProfileView
+from .views import (RegisterView, CustomLoginView, ReviewViewSet,createaccount, CheckProfileStatusView, get_profile,RequestResetPasswordView, PasswordResetConfirmView,LogoutView, UpdateProfileView
 )
-
 router = DefaultRouter()
 # You can re-enable the UserProfileViewSet route if needed later
 # router.register(r'profiles', UserProfileViewSet, basename='profiles')
 router.register(r'reviews', ReviewViewSet, basename='reviews')
-
 urlpatterns = [
     path('register/', RegisterView.as_view(), name='register'),
     path('login/', CustomLoginView.as_view(), name='login'),

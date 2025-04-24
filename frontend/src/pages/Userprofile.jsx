@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Save, Pencil, X, LogOut, User } from "lucide-react"; // Import User icon
-
 const Input = ({ label, name, value, onChange }) => (
   <div>
     <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
