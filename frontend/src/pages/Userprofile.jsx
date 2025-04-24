@@ -394,19 +394,37 @@ const UserProfile = () => {
                 </button>
                 
                 <div className="flex items-center gap-2">
-                  {[...Array(Math.ceil(reviews.length / itemsPerPage))].map((_, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => setCurrentPage(idx)}
-                      className={`w-8 h-8 rounded-full ${
-                        currentPage === idx 
-                          ? 'bg-blue-500 text-white' 
-                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                      }`}
-                    >
-                      {idx + 1}
-                    </button>
-                  ))}
+                  {currentPage < 3 ? (
+                    // Show first 3 pages when on pages 1-3
+                    [...Array(Math.min(3, Math.ceil(reviews.length / itemsPerPage)))].map((_, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => setCurrentPage(idx)}
+                        className={`w-8 h-8 rounded-full ${
+                          currentPage === idx 
+                            ? 'bg-blue-500 text-white' 
+                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        }`}
+                      >
+                        {idx + 1}
+                      </button>
+                    ))
+                  ) : (
+                    // Show previous 2 pages and current page when on page 4 or above
+                    [-2, -1, 0].map((offset) => (
+                      <button
+                        key={offset}
+                        onClick={() => setCurrentPage(currentPage + offset)}
+                        className={`w-8 h-8 rounded-full ${
+                          offset === 0
+                            ? 'bg-blue-500 text-white' 
+                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        }`}
+                      >
+                        {currentPage + offset + 1}
+                      </button>
+                    ))
+                  )}
                 </div>
 
                 <button
