@@ -21,8 +21,6 @@ from .models import UserProfile,Review, ProfileShare  # Assuming CustomUser is t
 from django.conf import settings
 from django.utils import timezone
 import uuid
-from django.core.mail import EmailMultiAlternatives
-from django.utils.html import strip_tags
 
 
 User = get_user_model()
@@ -476,3 +474,28 @@ def test_email(request):
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_reviews(request):
+    # Get the profile associated with the current user
+    profile = request.user.profile
+    
+    # Get all reviews for this profile
+    reviews = Review.objects.filter(profile=profile).order_by('-created_at')
+    
+    # Serialize and return the reviews
+    serializer = ReviewSerializer(reviews, many=True)
+    return Response(serializer.data)
+
+class UpdateProfileView(APIView):
+    parser_classes = (MultiPartParser, FormParser)
+
+    def put(self, request, *args, **kwargs):
+        user = request.user  # Get the logged-in user
+        profile = UserProfile.objects.get(user=user)
+        
+        serializer = UserProfileSerializer(profile, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=400)
