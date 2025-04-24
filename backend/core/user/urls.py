@@ -1,4 +1,6 @@
 from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
 from rest_framework.routers import DefaultRouter
 from .views import (
     RegisterView, 
@@ -14,6 +16,8 @@ from .views import (
     verify_profile_share,
     submit_review,
     test_email,
+    get_reviews,
+    UpdateProfileView
 )
 
 router = DefaultRouter()
@@ -33,5 +37,9 @@ urlpatterns = [
     path('verify-share/<uuid:token>/', verify_profile_share, name='verify-share'),
     path('submit-review/<uuid:token>/', submit_review, name='submit-review'),
     path('test-email/', test_email, name='test-email'),
-]
+    path('get_reviews/', get_reviews, name='get_reviews'),
+    path('update_profile/', UpdateProfileView.as_view(), name='update-profile'),]
 
+# Add this at the end to serve media files during development
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

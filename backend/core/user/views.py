@@ -21,6 +21,9 @@ from .models import UserProfile,Review, ProfileShare  # Assuming CustomUser is t
 from django.conf import settings
 from django.utils import timezone
 import uuid
+from rest_framework.parsers import MultiPartParser, FormParser
+from django.core.mail import EmailMultiAlternatives
+
 
 
 User = get_user_model()
