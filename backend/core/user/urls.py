@@ -3,7 +3,6 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     RegisterView, 
     CustomLoginView, 
-    UserProfileViewSet, 
     ReviewViewSet, 
     createaccount, 
     CheckProfileStatusView,
