@@ -57,6 +57,11 @@ REST_FRAMEWORK = {
     ),
     
 }
+SIMPLE_JWT = {
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'BLACKLIST_AFTER_ROTATION': True,  # Blacklist tokens after rotation (optional)
+    # Add other settings as needed
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

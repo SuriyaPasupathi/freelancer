@@ -1,6 +1,39 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Briefcase, Star, User, Save, Pencil } from "lucide-react";
+import { Save, Pencil, X, LogOut } from "lucide-react";
+
+const Input = ({ label, name, value, onChange }) => (
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+    <input
+      type="text"
+      name={name}
+      value={value}
+      onChange={onChange}
+      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring focus:border-blue-500"
+    />
+  </div>
+);
+
+const TextArea = ({ label, name, value, onChange }) => (
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+    <textarea
+      name={name}
+      value={value}
+      onChange={onChange}
+      rows={4}
+      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring focus:border-blue-500"
+    ></textarea>
+  </div>
+);
+
+const FileInput = ({ label, name, onChange }) => (
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+    <input type="file" name={name} onChange={onChange} className="w-full" />
+  </div>
+);
 
 const UserProfile = () => {
   const [profile, setProfile] = useState({});
@@ -78,16 +111,83 @@ const UserProfile = () => {
     setVideoIntro(null);
   };
 
+  const handleLogout = async () => {
+    const accessToken = localStorage.getItem("access_token");
+    const refreshToken = localStorage.getItem("refresh_token");
+  
+    if (!accessToken || !refreshToken) {
+      console.error("Missing tokens.");
+      return;
+    }
+  
+    try {
+      const response = await axios.post(
+        "http://localhost:8000/api/logout/",
+        { refresh: refreshToken },
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`, // Ensure the access token is sent in the header
+          },
+        }
+      );
+  
+      // If logout is successful, log a success message
+      console.log("Logout successful:", response.data);
+  
+      // Clear tokens from localStorage
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
+  
+      // Redirect to login page with a message
+      window.location.href = "/login";
+    } catch (err) {
+      console.error("Logout error:", err.response?.data || err.message);
+  
+      // Even if logout API fails, clear local storage and redirect
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
+      window.location.href = "/login";
+    }
+  };
+  
+  
   return (
     <div className="max-w-4xl mx-auto mt-10 p-6 bg-white shadow-md rounded-xl">
-      <h2 className="text-2xl font-bold text-blue-700 mb-6">User Profile</h2>
+      <div className="flex justify-between items-center mb-6">
+        <div className="flex items-center space-x-4">
+          {profile.profile_pic && (
+            <img
+              src={`http://localhost:8000${profile.profile_pic}`}
+              alt="Profile"
+              className="w-16 h-16 rounded-full object-cover"
+            />
+          )}
+          <h2 className="text-2xl font-bold text-blue-700">{profile.name || "User Profile"}</h2>
+        </div>
+
+        <div className="flex gap-3">
+          {!isEditing && (
+            <button
+              onClick={() => setIsEditing(true)}
+              className="flex items-center bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded shadow"
+            >
+              <Pencil className="w-4 h-4 mr-2" /> Edit
+            </button>
+          )}
+          <button
+            onClick={handleLogout}
+            className="flex items-center bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded shadow"
+          >
+            <LogOut className="w-4 h-4 mr-2" /> Logout
+          </button>
+        </div>
+      </div>
 
       {isEditing ? (
         <form className="space-y-4">
           <Input label="Name" name="name" value={formData.name || ""} onChange={handleChange} />
           <Input label="Job Title" name="job_title" value={formData.job_title || ""} onChange={handleChange} />
           <Input label="Job Specialization" name="job_specialization" value={formData.job_specialization || ""} onChange={handleChange} />
-          <TextArea label="Bio" name="bio" value={formData.bio || ""} onChange={handleChange} />
           <Input label="Email" name="email" value={formData.email || ""} onChange={handleChange} />
           <Input label="Mobile" name="mobile" value={formData.mobile || ""} onChange={handleChange} />
           <TextArea label="Services" name="services" value={formData.services || ""} onChange={handleChange} />
@@ -101,22 +201,26 @@ const UserProfile = () => {
           <FileInput label="Video Introduction" name="video_intro" onChange={handleFileChange} />
 
           <div className="flex gap-4">
-            <button type="button" onClick={handleSave} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-              <Save className="inline-block mr-2" />
-              Save
+            <button
+              type="button"
+              onClick={handleSave}
+              className="flex items-center bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded shadow"
+            >
+              <Save className="w-4 h-4 mr-2" /> Save
             </button>
-            <button type="button" onClick={handleCancel} className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">
-              <Pencil className="inline-block mr-2" />
-              Cancel
+            <button
+              type="button"
+              onClick={handleCancel}
+              className="flex items-center bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow"
+            >
+              <X className="w-4 h-4 mr-2" /> Cancel
             </button>
           </div>
         </form>
       ) : (
-        <div className="space-y-3">
-          <img src={profile.profile_pic} alt="Profile" className="w-32 h-32 rounded-full object-cover mb-4" />
-          <p><strong>Name:</strong> {profile.name}</p>
+        <div className="space-y-2 text-gray-700">
           <p><strong>Job Title:</strong> {profile.job_title}</p>
-          <p><strong>Job Specialization:</strong> {profile.job_specialization}</p>
+          <p><strong>Specialization:</strong> {profile.job_specialization}</p>
           <p><strong>Email:</strong> {profile.email}</p>
           <p><strong>Mobile:</strong> {profile.mobile}</p>
           <p><strong>Services:</strong> {profile.services}</p>
@@ -127,55 +231,16 @@ const UserProfile = () => {
           <p><strong>Certifications:</strong> {profile.certifications}</p>
           <p><strong>Portfolio:</strong> {profile.portfolio}</p>
           {profile.video_intro && (
-            <video controls width="300">
-              <source src={profile.video_intro} type="video/mp4" />
-              Your browser does not support the video tag.
-            </video>
+            <video
+              src={`http://localhost:8000${profile.video_intro}`}
+              controls
+              className="w-full mt-4 rounded"
+            />
           )}
-          <button
-            onClick={() => setIsEditing(true)}
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            <Pencil className="inline-block mr-2" />
-            Edit Profile
-          </button>
         </div>
       )}
     </div>
   );
 };
-
-const Input = ({ label, name, value, onChange }) => (
-  <div>
-    <label className="block font-medium mb-1">{label}</label>
-    <input
-      type="text"
-      name={name}
-      value={value}
-      onChange={onChange}
-      className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-300"
-    />
-  </div>
-);
-
-const TextArea = ({ label, name, value, onChange }) => (
-  <div>
-    <label className="block font-medium mb-1">{label}</label>
-    <textarea
-      name={name}
-      value={value}
-      onChange={onChange}
-      rows="3"
-      className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-300"
-    />
-  </div>
-);
-
-const FileInput = ({ label, name, onChange }) => (
-  <div>
-    <label className="block font-medium mb-1">{label}</label>
-    <input type="file" name={name} onChange={onChange} />
-  </div>
-);
 
 export default UserProfile;
