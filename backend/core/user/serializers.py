@@ -89,32 +89,36 @@ class UserProfileSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     social_links = SocialLinkSerializer(many=True, read_only=True)
     client_reviews = ReviewSerializer(many=True, read_only=True)
-    
-    # Fields for nested creation
+
+    # Media fields
+    profile_pic = serializers.ImageField(required=False)
+    video_intro = serializers.FileField(required=False)
+
+    # Write-only fields for social links
     linkedin = serializers.URLField(write_only=True, required=False, allow_blank=True)
     facebook = serializers.URLField(write_only=True, required=False, allow_blank=True)
     twitter = serializers.URLField(write_only=True, required=False, allow_blank=True)
-    
+
     class Meta:
         model = UserProfile
         fields = (
-            'id', 'user', 'subscription_type', 'name', 'profile_pic', 'job_title', 
+            'id', 'user', 'subscription_type', 'name', 'profile_pic', 'job_title',
             'job_specialization', 'rating', 'profile_url', 'email', 'mobile',
-            'services', 'experiences', 'skills', 'tools', 'education', 'certifications',
-            'video_intro', 'portfolio', 'social_links', 'client_reviews',
-            # Write-only fields for social links
+            'services', 'experiences', 'skills', 'tools', 'education',
+            'certifications', 'video_intro', 'portfolio',
+            'social_links', 'client_reviews',
             'linkedin', 'facebook', 'twitter'
         )
-    
+
     def create(self, validated_data):
         # Extract social links data
         linkedin = validated_data.pop('linkedin', None)
         facebook = validated_data.pop('facebook', None)
         twitter = validated_data.pop('twitter', None)
-        
+
         # Create profile
         profile = UserProfile.objects.create(**validated_data)
-        
+
         # Create social links if provided
         social_links = []
         if linkedin:
@@ -123,42 +127,38 @@ class UserProfileSerializer(serializers.ModelSerializer):
             social_links.append(SocialLink(user_profile=profile, platform='facebook', url=facebook))
         if twitter:
             social_links.append(SocialLink(user_profile=profile, platform='twitter', url=twitter))
-        
+
         if social_links:
             SocialLink.objects.bulk_create(social_links)
-        
+
         return profile
-    
+
     def update(self, instance, validated_data):
         # Extract social links data
         linkedin = validated_data.pop('linkedin', None)
         facebook = validated_data.pop('facebook', None)
         twitter = validated_data.pop('twitter', None)
-        
-        # Update profile
+
+        # Update profile fields
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
-        
-        # Update social links
+
+        # Update or create social links
         if linkedin is not None:
             SocialLink.objects.update_or_create(
-                user_profile=instance, platform='linkedin',
-                defaults={'url': linkedin}
+                user_profile=instance, platform='linkedin', defaults={'url': linkedin}
             )
         if facebook is not None:
             SocialLink.objects.update_or_create(
-                user_profile=instance, platform='facebook',
-                defaults={'url': facebook}
+                user_profile=instance, platform='facebook', defaults={'url': facebook}
             )
         if twitter is not None:
             SocialLink.objects.update_or_create(
-                user_profile=instance, platform='twitter',
-                defaults={'url': twitter}
+                user_profile=instance, platform='twitter', defaults={'url': twitter}
             )
-        
+
         return instance
-    
 
 class RequestPasswordResetSerializer(serializers.Serializer):
     email = serializers.EmailField()
