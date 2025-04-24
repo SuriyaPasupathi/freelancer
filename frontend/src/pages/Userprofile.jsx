@@ -352,87 +352,154 @@ const UserProfile = () => {
               {reviews
                 .slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage)
                 .map((review, index) => (
-                  <div key={index} className="border rounded-lg p-6 bg-gray-50">
-                    <h4 className="text-xl font-bold mb-3">Review from {review.reviewer_name}</h4>
-                    
-                    <div className="mb-3">
-                      <p className="text-gray-700 font-medium mb-1">Reviewer:</p>
-                      <p className="text-gray-800 border p-2 rounded bg-white">{review.reviewer_name}</p>
+                  <div key={index} className="flex gap-6 border rounded-lg p-6 bg-gray-50">
+                    {/* Name Column */}
+                    <div className="w-1/4">
+                      <h4 className="text-gray-700 font-medium mb-2">Reviewer</h4>
+                      <p className="text-gray-800">{review.reviewer_name}</p>
+                      <p className="text-sm text-gray-500 mt-2">
+                        {new Date(review.created_at).toLocaleDateString()}
+                      </p>
                     </div>
-                    
-                    <div className="mb-3">
-                      <p className="text-gray-700 font-medium mb-1">Rating:</p>
-                      <div className="flex items-center border p-2 rounded bg-white">
-                        {renderStars(review.rating)}
-                        <span className="ml-2">{review.rating} Stars</span>
+
+                    {/* Rating Column */}
+                    <div className="w-1/4">
+                      <h4 className="text-gray-700 font-medium mb-2">Rating</h4>
+                      <div className="flex items-center gap-1">
+                        {[...Array(5)].map((_, i) => (
+                          <Star
+                            key={i}
+                            className={`w-5 h-5 ${
+                              i < review.rating 
+                                ? 'text-yellow-400 fill-current' 
+                                : 'text-gray-300'
+                            }`}
+                          />
+                        ))}
                       </div>
                     </div>
-                    
-                    <div>
-                      <p className="text-gray-700 font-medium mb-1">Comment:</p>
-                      <div className="border p-2 rounded bg-white min-h-24">
-                        {review.comment}
-                      </div>
+
+                    {/* Comments Column */}
+                    <div className="w-2/4">
+                      <h4 className="text-gray-700 font-medium mb-2">Comment</h4>
+                      <p className="text-gray-800">{review.comment}</p>
                     </div>
-                    
-                    <p className="text-sm text-gray-500 mt-3">
-                      Submitted on {new Date(review.created_at).toLocaleDateString()}
-                    </p>
                   </div>
               ))}
             </div>
 
-            {/* Pagination - Only show if there are more than 3 reviews */}
+            {/* Pagination */}
             {reviews.length > itemsPerPage && (
               <div className="mt-6 flex justify-center items-center gap-2">
+                {/* Previous button */}
                 <button
                   onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
                   disabled={currentPage === 0}
-                  className="px-4 py-2 rounded bg-blue-500 text-white disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                  className="px-3 py-1 rounded bg-blue-500 text-white disabled:bg-gray-300 
+                            disabled:cursor-not-allowed hover:bg-blue-600 transition-colors"
                 >
                   Previous
                 </button>
-                
-                <div className="flex items-center gap-2">
-                  {currentPage < 3 ? (
-                    // Show first 3 pages when on pages 1-3
-                    [...Array(Math.min(3, Math.ceil(reviews.length / itemsPerPage)))].map((_, idx) => (
+
+                {/* Page numbers */}
+                <div className="flex items-center gap-1">
+                  {(() => {
+                    const totalPages = Math.ceil(reviews.length / itemsPerPage);
+                    let pages = [];
+                    
+                    // Always show first page
+                    if (currentPage > 2) {
+                      pages.push(
+                        <button
+                          key="1"
+                          onClick={() => setCurrentPage(0)}
+                          className="px-3 py-1 rounded hover:bg-gray-100"
+                        >
+                          1
+                        </button>
+                      );
+                      
+                      // Add ellipsis if not showing second page
+                      if (currentPage > 3) {
+                        pages.push(
+                          <span key="ellipsis1" className="px-2">
+                            ...
+                          </span>
+                        );
+                      }
+                    }
+
+                    // Show previous 2 pages if they exist
+                    for (let i = Math.max(0, currentPage - 2); i < currentPage; i++) {
+                      pages.push(
+                        <button
+                          key={i + 1}
+                          onClick={() => setCurrentPage(i)}
+                          className="px-3 py-1 rounded hover:bg-gray-100"
+                        >
+                          {i + 1}
+                        </button>
+                      );
+                    }
+
+                    // Current page
+                    pages.push(
                       <button
-                        key={idx}
-                        onClick={() => setCurrentPage(idx)}
-                        className={`w-8 h-8 rounded-full ${
-                          currentPage === idx 
-                            ? 'bg-blue-500 text-white' 
-                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                        }`}
+                        key={currentPage + 1}
+                        onClick={() => setCurrentPage(currentPage)}
+                        className="px-3 py-1 rounded bg-blue-500 text-white"
                       >
-                        {idx + 1}
+                        {currentPage + 1}
                       </button>
-                    ))
-                  ) : (
-                    // Show previous 2 pages and current page when on page 4 or above
-                    [-2, -1, 0].map((offset) => (
-                      <button
-                        key={offset}
-                        onClick={() => setCurrentPage(currentPage + offset)}
-                        className={`w-8 h-8 rounded-full ${
-                          offset === 0
-                            ? 'bg-blue-500 text-white' 
-                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                        }`}
-                      >
-                        {currentPage + offset + 1}
-                      </button>
-                    ))
-                  )}
+                    );
+
+                    // Show next 2 pages if they exist
+                    for (let i = currentPage + 1; i <= Math.min(currentPage + 2, totalPages - 1); i++) {
+                      pages.push(
+                        <button
+                          key={i + 1}
+                          onClick={() => setCurrentPage(i)}
+                          className="px-3 py-1 rounded hover:bg-gray-100"
+                        >
+                          {i + 1}
+                        </button>
+                      );
+                    }
+
+                    // Add ellipsis and last page if necessary
+                    if (currentPage < totalPages - 4) {
+                      pages.push(
+                        <span key="ellipsis2" className="px-2">
+                          ...
+                        </span>
+                      );
+                    }
+                    
+                    // Always show last page if not in range
+                    if (currentPage < totalPages - 3) {
+                      pages.push(
+                        <button
+                          key={totalPages}
+                          onClick={() => setCurrentPage(totalPages - 1)}
+                          className="px-3 py-1 rounded hover:bg-gray-100"
+                        >
+                          {totalPages}
+                        </button>
+                      );
+                    }
+
+                    return pages;
+                  })()}
                 </div>
 
+                {/* Next button */}
                 <button
                   onClick={() => setCurrentPage(prev => 
                     Math.min(Math.ceil(reviews.length / itemsPerPage) - 1, prev + 1)
                   )}
                   disabled={currentPage >= Math.ceil(reviews.length / itemsPerPage) - 1}
-                  className="px-4 py-2 rounded bg-blue-500 text-white disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                  className="px-3 py-1 rounded bg-blue-500 text-white disabled:bg-gray-300 
+                            disabled:cursor-not-allowed hover:bg-blue-600 transition-colors"
                 >
                   Next
                 </button>

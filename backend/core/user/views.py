@@ -2,17 +2,12 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import generics, permissions, status
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework.decorators import action
 from rest_framework import viewsets, permissions, status
-from django.utils.crypto import get_random_string
-from django.utils.timezone import now
-from django.core.mail import send_mail
 from django.contrib.auth import get_user_model
 from .serializers import RegisterSerializer, UserProfileSerializer, RequestPasswordResetSerializer, PasswordResetConfirmSerializer,ReviewSerializer
 from .models import UserProfile,Review  # Assuming CustomUser is the model for your custom user
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
-from django.core.mail import send_mail
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.encoding import force_bytes, force_str
