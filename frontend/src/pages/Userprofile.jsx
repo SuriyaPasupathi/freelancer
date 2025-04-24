@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Save, Pencil, X, LogOut } from "lucide-react";
+import { Save, Pencil, X, LogOut, User } from "lucide-react"; // Import User icon
 
 const Input = ({ label, name, value, onChange }) => (
   <div>
@@ -41,6 +41,7 @@ const UserProfile = () => {
   const [formData, setFormData] = useState({});
   const [profilePic, setProfilePic] = useState(null);
   const [videoIntro, setVideoIntro] = useState(null);
+  const [showLogout, setShowLogout] = useState(false); // Toggle logout button
 
   useEffect(() => {
     const token = localStorage.getItem("access_token");
@@ -114,43 +115,35 @@ const UserProfile = () => {
   const handleLogout = async () => {
     const accessToken = localStorage.getItem("access_token");
     const refreshToken = localStorage.getItem("refresh_token");
-  
+
     if (!accessToken || !refreshToken) {
       console.error("Missing tokens.");
       return;
     }
-  
+
     try {
-      const response = await axios.post(
+      await axios.post(
         "http://localhost:8000/api/logout/",
         { refresh: refreshToken },
         {
           headers: {
-            Authorization: `Bearer ${accessToken}`, // Ensure the access token is sent in the header
+            Authorization: `Bearer ${accessToken}`,
           },
         }
       );
-  
-      // If logout is successful, log a success message
-      console.log("Logout successful:", response.data);
-  
-      // Clear tokens from localStorage
+
       localStorage.removeItem("access_token");
       localStorage.removeItem("refresh_token");
-  
-      // Redirect to login page with a message
+
       window.location.href = "/login";
     } catch (err) {
       console.error("Logout error:", err.response?.data || err.message);
-  
-      // Even if logout API fails, clear local storage and redirect
       localStorage.removeItem("access_token");
       localStorage.removeItem("refresh_token");
       window.location.href = "/login";
     }
   };
-  
-  
+
   return (
     <div className="max-w-4xl mx-auto mt-10 p-6 bg-white shadow-md rounded-xl">
       <div className="flex justify-between items-center mb-6">
@@ -165,7 +158,15 @@ const UserProfile = () => {
           <h2 className="text-2xl font-bold text-blue-700">{profile.name || "User Profile"}</h2>
         </div>
 
-        <div className="flex gap-3">
+        <div className="flex flex-col items-end gap-3">
+          {/* User icon toggles logout button */}
+          <button
+            onClick={() => setShowLogout(!showLogout)}
+            className="text-gray-700 hover:text-gray-900"
+          >
+            <User className="w-6 h-6" />
+          </button>
+
           {!isEditing && (
             <button
               onClick={() => setIsEditing(true)}
@@ -174,12 +175,15 @@ const UserProfile = () => {
               <Pencil className="w-4 h-4 mr-2" /> Edit
             </button>
           )}
-          <button
-            onClick={handleLogout}
-            className="flex items-center bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded shadow"
-          >
-            <LogOut className="w-4 h-4 mr-2" /> Logout
-          </button>
+
+          {showLogout && (
+            <button
+              onClick={handleLogout}
+              className="flex items-center bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded shadow"
+            >
+              <LogOut className="w-4 h-4 mr-2" /> Logout
+            </button>
+          )}
         </div>
       </div>
 
