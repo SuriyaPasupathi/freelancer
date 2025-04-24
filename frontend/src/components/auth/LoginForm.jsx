@@ -12,37 +12,20 @@ const LoginForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     try {
-      const response = await axios.post('http://127.0.0.1:8000/api/login/', {
+      const response = await axios.post('http://localhost:8000/api/login/', {
         email: form.email,
         password: form.password,
       });
 
-      const { access, refresh, user } = response.data;
-
-      // Store tokens in localStorage
-      localStorage.setItem('access_token', access);
-      localStorage.setItem('refresh_token', refresh);
-      localStorage.setItem('user', JSON.stringify(user));
-
-      const profileRes = await axios.get("http://localhost:8000/api/profile_status/", {
-        headers: {
-          Authorization: `Bearer ${access}`,
-        },
-      });
-
-      const { has_profile } = profileRes.data;
-
-      if (has_profile) {
-        navigate('/Userprofile');
-      } else {
-        navigate('/subscription');
-      }
-
-    } catch (err) {
-      console.error("Login failed:", err.response?.data || err.message);
-      alert('Invalid email or password');
+      localStorage.setItem('access_token', response.data.access);
+      localStorage.setItem('refresh_token', response.data.refresh);
+      
+      // Redirect to UserProfile after successful login
+      navigate('/Userprofile');
+    } catch (error) {
+      console.error('Login failed:', error);
+      // Handle error...
     }
   };
 

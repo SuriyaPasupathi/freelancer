@@ -45,6 +45,8 @@ const UserProfile = () => {
   const [videoIntro, setVideoIntro] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const [currentPage, setCurrentPage] = useState(0);
+  const itemsPerPage = 3; // Set to show 3 reviews per page
 
   useEffect(() => {
     const token = localStorage.getItem("access_token");
@@ -345,37 +347,80 @@ const UserProfile = () => {
             <p className="text-gray-500">No reviews yet. Share your profile to receive reviews.</p>
           </div>
         ) : (
-          <div className="space-y-6">
-            {reviews.map((review, index) => (
-              <div key={index} className="border rounded-lg p-6 bg-gray-50">
-                <h4 className="text-xl font-bold mb-3">Review from {review.reviewer_name}</h4>
-                
-                <div className="mb-3">
-                  <p className="text-gray-700 font-medium mb-1">Reviewer:</p>
-                  <p className="text-gray-800 border p-2 rounded bg-white">{review.reviewer_name}</p>
-                </div>
-                
-                <div className="mb-3">
-                  <p className="text-gray-700 font-medium mb-1">Rating:</p>
-                  <div className="flex items-center border p-2 rounded bg-white">
-                    {renderStars(review.rating)}
-                    <span className="ml-2">{review.rating} Stars</span>
+          <>
+            <div className="space-y-6">
+              {reviews
+                .slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage)
+                .map((review, index) => (
+                  <div key={index} className="border rounded-lg p-6 bg-gray-50">
+                    <h4 className="text-xl font-bold mb-3">Review from {review.reviewer_name}</h4>
+                    
+                    <div className="mb-3">
+                      <p className="text-gray-700 font-medium mb-1">Reviewer:</p>
+                      <p className="text-gray-800 border p-2 rounded bg-white">{review.reviewer_name}</p>
+                    </div>
+                    
+                    <div className="mb-3">
+                      <p className="text-gray-700 font-medium mb-1">Rating:</p>
+                      <div className="flex items-center border p-2 rounded bg-white">
+                        {renderStars(review.rating)}
+                        <span className="ml-2">{review.rating} Stars</span>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <p className="text-gray-700 font-medium mb-1">Comment:</p>
+                      <div className="border p-2 rounded bg-white min-h-24">
+                        {review.comment}
+                      </div>
+                    </div>
+                    
+                    <p className="text-sm text-gray-500 mt-3">
+                      Submitted on {new Date(review.created_at).toLocaleDateString()}
+                    </p>
                   </div>
-                </div>
+              ))}
+            </div>
+
+            {/* Pagination - Only show if there are more than 3 reviews */}
+            {reviews.length > itemsPerPage && (
+              <div className="mt-6 flex justify-center items-center gap-2">
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
+                  disabled={currentPage === 0}
+                  className="px-4 py-2 rounded bg-blue-500 text-white disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                >
+                  Previous
+                </button>
                 
-                <div>
-                  <p className="text-gray-700 font-medium mb-1">Comment:</p>
-                  <div className="border p-2 rounded bg-white min-h-24">
-                    {review.comment}
-                  </div>
+                <div className="flex items-center gap-2">
+                  {[...Array(Math.ceil(reviews.length / itemsPerPage))].map((_, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setCurrentPage(idx)}
+                      className={`w-8 h-8 rounded-full ${
+                        currentPage === idx 
+                          ? 'bg-blue-500 text-white' 
+                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      }`}
+                    >
+                      {idx + 1}
+                    </button>
+                  ))}
                 </div>
-                
-                <p className="text-sm text-gray-500 mt-3">
-                  Submitted on {new Date(review.created_at).toLocaleDateString()}
-                </p>
+
+                <button
+                  onClick={() => setCurrentPage(prev => 
+                    Math.min(Math.ceil(reviews.length / itemsPerPage) - 1, prev + 1)
+                  )}
+                  disabled={currentPage >= Math.ceil(reviews.length / itemsPerPage) - 1}
+                  className="px-4 py-2 rounded bg-blue-500 text-white disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                >
+                  Next
+                </button>
               </div>
-            ))}
-          </div>
+            )}
+          </>
         )}
       </div>
     </div>
