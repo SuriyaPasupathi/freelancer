@@ -173,6 +173,8 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 EMAIL_TIMEOUT = 30  # timeout in seconds
 
 FRONTEND_URL = 'http://localhost:5173'  # Your React frontend URL
+ALLOWED_HOSTS = ['013b-103-186-120-4.ngrok-free.app']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 # Logging configuration
 LOGGING = {

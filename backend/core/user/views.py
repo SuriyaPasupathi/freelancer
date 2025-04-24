@@ -28,8 +28,18 @@ class RegisterView(APIView):
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()  # This calls the create method inside the serializer
-            return Response({"message": "Account created successfully!"}, status=status.HTTP_201_CREATED)
+            user = serializer.save()
+
+            # Generate tokens
+            refresh = RefreshToken.for_user(user)
+            access = refresh.access_token
+
+            return Response({
+                "message": "Account created successfully!",
+                "refresh": str(refresh),
+                "access": str(access)
+            }, status=status.HTTP_201_CREATED)
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # ✅ Login View (Custom response with tokens)
@@ -42,6 +52,7 @@ class CustomLoginView(APIView):
         if user and user.check_password(password):
             refresh = RefreshToken.for_user(user)
             return Response({
+                "message": "Login successful!",
                 "access": str(refresh.access_token),
                 "refresh": str(refresh),
                 "user": {
@@ -49,10 +60,9 @@ class CustomLoginView(APIView):
                     "username": user.username,
                     "email": user.email,
                 }
-            })
+            }, status=status.HTTP_200_OK)
 
         return Response({"detail": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
-    
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def createaccount(request):
