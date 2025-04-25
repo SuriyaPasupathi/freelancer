@@ -21,14 +21,11 @@ const LoginForm = () => {
 
       const { access, refresh, user } = response.data;
 
-      // Save tokens and user info
       localStorage.setItem('access', access);
       localStorage.setItem('refresh', refresh);
       localStorage.setItem('user', JSON.stringify(user));
 
-      // ✅ Check profile status
       const profileRes = await axios.get("http://localhost:8000/api/profile_status/", {
-
         headers: {
           Authorization: `Bearer ${access}`,
         },
@@ -37,9 +34,9 @@ const LoginForm = () => {
       const { has_profile } = profileRes.data;
 
       if (has_profile) {
-        navigate('/Userprofile');  // go to profile page
+        navigate('/Userprofile');
       } else {
-        navigate('/subscription');  // go to subscription page first
+        navigate('/subscription');
       }
 
     } catch (err) {
@@ -90,6 +87,16 @@ const LoginForm = () => {
             Login
           </button>
         </form>
+
+        {/* Forgot Password Link */}
+        <div className="mt-4 text-center">
+          <button
+            onClick={() => navigate('/ForgotPassword')}
+            className="text-blue-600 hover:underline text-sm"
+          >
+            Forgot Password?
+          </button>
+        </div>
       </div>
     </div>
   );
