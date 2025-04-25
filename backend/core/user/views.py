@@ -18,8 +18,10 @@ from django.utils import timezone
 import uuid
 from rest_framework.parsers import MultiPartParser, FormParser
 from django.core.mail import EmailMultiAlternatives
+import stripe
+from django.http import JsonResponse
 
-
+stripe.api_key = settings.STRIPE_SECRET_KEY
 
 User = get_user_model()
 
@@ -497,3 +499,126 @@ class UpdateProfileView(APIView):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=400)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def update_subscription(request):
+    """
+    Update user's subscription type and check if they have an existing profile
+    """
+    subscription_type = request.data.get('subscription_type')
+    
+    if subscription_type not in ['free', 'standard', 'premium']:
+        return Response(
+            {'message': 'Invalid subscription type'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    try:
+        # Try to get existing profile
+        profile = UserProfile.objects.get(user=request.user)
+        profile.subscription_type = subscription_type
+        profile.save()
+        
+        return Response({
+            'message': 'Subscription updated successfully',
+            'has_profile': True
+        })
+        
+    except UserProfile.DoesNotExist:
+        # If no profile exists, just return has_profile as False
+        return Response({
+            'message': 'Ready to create profile',
+            'has_profile': False})
+        return Response(serializer.errors, status=400)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_payment_intent(request):
+    try:
+        subscription_type = request.data.get('subscription_type')
+        
+        # Get price based on subscription type
+        price_id = settings.STRIPE_PRICE_IDS.get(subscription_type)
+        if not price_id:
+            return Response(
+                {'error': 'Invalid subscription type'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Create Stripe Checkout Session
+        checkout_session = stripe.checkout.Session.create(
+            customer_email=request.user.email,
+            payment_method_types=['card'],
+            line_items=[{
+                'price': price_id,
+                'quantity': 1,
+            }],
+            mode='payment',
+            success_url=f'{settings.FRONTEND_URL}/payment-success?session_id={{CHECKOUT_SESSION_ID}}',
+            cancel_url=f'{settings.FRONTEND_URL}/subscriptions',
+            metadata={
+                'user_id': request.user.id,
+                'subscription_type': subscription_type
+            }
+        )
+        
+        return JsonResponse({
+            'sessionId': checkout_session.id,
+            'publicKey': settings.STRIPE_PUBLISHABLE_KEY
+        })
+        
+    except Exception as e:
+        return Response(
+            {'error': str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+@api_view(['POST'])
+def stripe_webhook(request):
+    payload = request.body
+    sig_header = request.META.get('HTTP_STRIPE_SIGNATURE')
+
+    try:
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, settings.STRIPE_WEBHOOK_SECRET
+        )
+
+        if event['type'] == 'checkout.session.completed':
+            session = event['data']['object']
+            
+            # Get user and subscription details from metadata
+            user_id = session['metadata']['user_id']
+            subscription_type = session['metadata']['subscription_type']
+            
+            # Update user's profile with new subscription
+            try:
+                profile = UserProfile.objects.get(user_id=user_id)
+                profile.subscription_type = subscription_type
+                profile.subscription_active = True
+                profile.save()
+            except UserProfile.DoesNotExist:
+                # Create new profile if doesn't exist
+                UserProfile.objects.create(
+                    user_id=user_id,
+                    subscription_type=subscription_type,
+                    subscription_active=True
+                )
+
+        return JsonResponse({'status': 'success'})
+
+    except ValueError as e:
+        return Response(
+            {'error': 'Invalid payload'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    except stripe.error.SignatureVerificationError as e:
+        return Response(
+            {'error': 'Invalid signature'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    except Exception as e:
+        return Response(
+            {'error': str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )

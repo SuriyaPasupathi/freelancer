@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { loadStripe } from '@stripe/stripe-js';
 
 function CheckIcon() {
   return (
@@ -11,6 +13,8 @@ function CheckIcon() {
 
 function SubscriptionPage() {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const plans = [
     {
@@ -61,25 +65,96 @@ function SubscriptionPage() {
     }
   ];
 
-  const handleSignup = (plan) => {
-    navigate("/CreateAccount", { state: { subscription_type: plan.type } });
+  const handleSubscription = async (plan) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const token = localStorage.getItem('access_token');
+      if (!token) {
+        navigate("/login", { 
+          state: { from: '/subscriptions', plan: plan.type } 
+        });
+        return;
+      }
+
+      if (plan.type === 'free') {
+        // Handle free subscription
+        const response = await axios.post(
+          'http://localhost:8000/api/update-subscription/',
+          { subscription_type: plan.type },
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+
+        if (response.data.has_profile) {
+          navigate("/profile");
+        } else {
+          navigate("/CreateAccount", { 
+            state: { subscription_type: plan.type } 
+          });
+        }
+      } else {
+        // Handle paid subscription
+        const response = await axios.post(
+          'http://localhost:8000/api/create-payment-intent/',
+          { subscription_type: plan.type },
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+
+        const stripe = await loadStripe(response.data.publicKey);
+        const { error } = await stripe.redirectToCheckout({
+          sessionId: response.data.sessionId
+        });
+
+        if (error) {
+          setError(error.message);
+        }
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || 'An error occurred');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-100 py-10 px-5">
+      {error && (
+        <div className="fixed top-5 right-5 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+          {error}
+        </div>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-10 w-full max-w-screen-lg">
         {plans.map((plan, index) => (
           <div 
             key={index}
-            className={`bg-white shadow-lg rounded-lg overflow-hidden ${plan.popular ? 'border-4 border-blue-600' : ''}`}
+            className={`bg-white shadow-lg rounded-lg overflow-hidden ${
+              plan.popular ? 'border-4 border-blue-600' : ''
+            }`}
           >
-            {plan.popular && <div className="bg-blue-600 text-white text-center py-2 font-semibold text-xl">Best Choice</div>}
+            {plan.popular && (
+              <div className="bg-blue-600 text-white text-center py-2 font-semibold text-xl">
+                Best Choice
+              </div>
+            )}
             <div className="p-6">
               <h3 className="text-2xl font-semibold text-gray-900">{plan.name}</h3>
               <div className="mt-3 flex items-center text-3xl font-bold text-gray-800">
                 <span className="text-xl text-gray-500">USD</span>
                 <span>{plan.price}</span>
-                {plan.price !== "Free" && <span className="text-sm text-gray-500 ml-2">/annually</span>}
+                {plan.price !== "Free" && (
+                  <span className="text-sm text-gray-500 ml-2">/annually</span>
+                )}
               </div>
               <div className="mt-6">
                 <p className="font-medium text-gray-700">Includes:</p>
@@ -95,10 +170,15 @@ function SubscriptionPage() {
             </div>
             <div className="px-6 py-4 bg-gray-100 text-center">
               <button
-                className="w-full py-3 bg-blue-600 text-white font-semibold text-lg rounded-md hover:bg-blue-700 transition duration-300"
-                onClick={() => handleSignup(plan)}
+                className={`w-full py-3 ${
+                  loading 
+                    ? 'bg-gray-400 cursor-not-allowed' 
+                    : 'bg-blue-600 hover:bg-blue-700'
+                } text-white font-semibold text-lg rounded-md transition duration-300`}
+                onClick={() => handleSubscription(plan)}
+                disabled={loading}
               >
-                Sign Up Now
+                {loading ? 'Processing...' : 'Sign Up Now'}
               </button>
             </div>
           </div>

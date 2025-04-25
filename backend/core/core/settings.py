@@ -199,3 +199,14 @@ LOGGING = {
         },
     },
 }
+
+# Stripe Settings
+STRIPE_PUBLISHABLE_KEY = 'pk_test_51RHitSIMgP67b2MEx4YgK26uUrzjuXnvh6DmNPjwpo3pEixe6NhlobBjPYE4Qo92Nr6KDo23c0yfStlN17xzwamE009LHISqbk'
+STRIPE_SECRET_KEY = 'your_stripe_secret_keysk_test_51RHitSIMgP67b2MEwWOWnhMrk29JxXTyAVxJJk0mle8PofagpTLccxVpc8wDPaMpTfLZkds5VAH8E3NaJacZH82y001mOnfODY'
+STRIPE_WEBHOOK_SECRET = 'your_stripe_webhook_secret'
+
+# Product Price IDs
+STRIPE_PRICE_IDS = {
+    'standard': 'price_standard_id',
+    'premium': 'price_premium_id',
+}

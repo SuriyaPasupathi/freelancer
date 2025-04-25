@@ -17,7 +17,10 @@ from .views import (
     submit_review,
     test_email,
     get_reviews,
-    UpdateProfileView
+    UpdateProfileView,
+    update_subscription,
+    create_payment_intent,
+    stripe_webhook
 )
 
 router = DefaultRouter()
@@ -38,7 +41,11 @@ urlpatterns = [
     path('submit-review/<uuid:token>/', submit_review, name='submit-review'),
     path('test-email/', test_email, name='test-email'),
     path('get_reviews/', get_reviews, name='get_reviews'),
-    path('update_profile/', UpdateProfileView.as_view(), name='update-profile'),]
+    path('update_profile/', UpdateProfileView.as_view(), name='update-profile'),
+    path('update-subscription/', update_subscription, name='update-subscription'),
+    path('create-payment-intent/', create_payment_intent, name='create-payment-intent'),
+    path('webhook/stripe/', stripe_webhook, name='stripe-webhook'),
+]
 
 # Add this at the end to serve media files during development
 if settings.DEBUG:
