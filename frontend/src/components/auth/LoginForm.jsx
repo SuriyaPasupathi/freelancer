@@ -12,25 +12,40 @@ const LoginForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     try {
-      const response = await axios.post('http://localhost:8000/api/login/', {
+      const response = await axios.post('http://127.0.0.1:8000/api/login/', {
         email: form.email,
         password: form.password,
       });
 
-      localStorage.setItem('access_token', response.data.access);
-      localStorage.setItem('refresh_token', response.data.refresh);
-      
-      // Redirect to UserProfile after successful login
-      navigate('/Userprofile');
-    } catch (error) {
-      console.error('Login failed:', error);
-      // Handle error...
-    }
-  };
+      const { access, refresh, user } = response.data;
 
-  const handleForgotPassword = () => {
-    navigate('/ForgotPassword');
+      // Save tokens and user info
+      localStorage.setItem('access', access);
+      localStorage.setItem('refresh', refresh);
+      localStorage.setItem('user', JSON.stringify(user));
+
+      // ✅ Check profile status
+      const profileRes = await axios.get("http://localhost:8000/api/profile_status/", {
+
+        headers: {
+          Authorization: `Bearer ${access}`,
+        },
+      });
+
+      const { has_profile } = profileRes.data;
+
+      if (has_profile) {
+        navigate('/Userprofile');  // go to profile page
+      } else {
+        navigate('/subscription');  // go to subscription page first
+      }
+
+    } catch (err) {
+      console.error("Login failed:", err.response?.data || err.message);
+      alert('Invalid email or password');
+    }
   };
 
   return (
@@ -53,7 +68,7 @@ const LoginForm = () => {
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
-          <div className="mb-2">
+          <div className="mb-6">
             <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">
               Password
             </label>
@@ -68,19 +83,6 @@ const LoginForm = () => {
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
-
-          {/* Forgot Password */}
-          <div className="flex justify-center mb-6">
-            <button
-             type="button"
-             onClick={handleForgotPassword}
-             className="text-sm text-blue-600 hover:underline focus:outline-none"
-            >
-              Forgot Password?
-             </button>
-          </div>
-
-
           <button
             type="submit"
             className="w-full py-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition duration-300"
